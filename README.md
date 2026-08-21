@@ -4,7 +4,8 @@
 agent 对话「视图模型 + headless 逻辑 + transcript 渲染件」组件库的类型草稿。
 
 **状态：讨论稿。** 目的是验证三个项目的消息模型能否收敛到一套共享类型；
-映射验证见 [docs/mapping.md](docs/mapping.md)。
+映射验证见 [docs/mapping.md](docs/mapping.md)；三个 host 的 adapter 施工
+清单、layer-2/3 剩余项与环境备忘见 [docs/roadmap.md](docs/roadmap.md)。
 
 ## 分层
 
