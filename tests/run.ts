@@ -205,14 +205,26 @@ check('mergeStreamText semantics', () => {
 });
 
 check('splitThinkTags: closed, unclosed, mixed', () => {
-  eq(splitThinkTags('a<think>t1</think>b'), { visible: 'ab', thinking: 't1', thinkingOpen: false }, 'closed');
-  eq(splitThinkTags('a<thinking>still going'), { visible: 'a', thinking: 'still going', thinkingOpen: true }, 'unclosed');
+  eq(
+    splitThinkTags('a<think>t1</think>b'),
+    { visible: 'ab', thinking: 't1', thinkingSegments: ['t1'], thinkingOpen: false },
+    'closed',
+  );
+  eq(
+    splitThinkTags('a<thinking>still going'),
+    { visible: 'a', thinking: 'still going', thinkingSegments: ['still going'], thinkingOpen: true },
+    'unclosed',
+  );
   eq(
     splitThinkTags('<think>x</think>mid<think>y</think>end'),
-    { visible: 'midend', thinking: 'xy', thinkingOpen: false },
-    'multiple segments',
+    { visible: 'midend', thinking: 'xy', thinkingSegments: ['x', 'y'], thinkingOpen: false },
+    'multiple segments keep boundaries',
   );
-  eq(splitThinkTags('no tags'), { visible: 'no tags', thinking: '', thinkingOpen: false }, 'none');
+  eq(
+    splitThinkTags('no tags'),
+    { visible: 'no tags', thinking: '', thinkingSegments: [], thinkingOpen: false },
+    'none',
+  );
 });
 
 check('stabilizeStreamingMarkdown closes dangling fences', () => {

@@ -30,6 +30,8 @@ export interface ThinkSplit {
   visible: string;
   /** Concatenated contents of all think segments. */
   thinking: string;
+  /** Each think segment's raw content, in order (hosts join for display). */
+  thinkingSegments: string[];
   /** True when the last think tag is unclosed (thinking is still streaming). */
   thinkingOpen: boolean;
 }
@@ -43,22 +45,32 @@ export function splitThinkTags(text: string): ThinkSplit {
   const openRe = /<think(?:ing)?>/i;
   const closeRe = /<\/think(?:ing)?>/i;
   let visible = '';
-  let thinking = '';
+  const thinkingSegments: string[] = [];
   let rest = text;
   for (;;) {
     const open = openRe.exec(rest);
     if (!open) {
       visible += rest;
-      return { visible, thinking, thinkingOpen: false };
+      return {
+        visible,
+        thinking: thinkingSegments.join(''),
+        thinkingSegments,
+        thinkingOpen: false,
+      };
     }
     visible += rest.slice(0, open.index);
     const afterOpen = rest.slice(open.index + open[0].length);
     const close = closeRe.exec(afterOpen);
     if (!close) {
-      thinking += afterOpen;
-      return { visible, thinking, thinkingOpen: true };
+      thinkingSegments.push(afterOpen);
+      return {
+        visible,
+        thinking: thinkingSegments.join(''),
+        thinkingSegments,
+        thinkingOpen: true,
+      };
     }
-    thinking += afterOpen.slice(0, close.index);
+    thinkingSegments.push(afterOpen.slice(0, close.index));
     rest = afterOpen.slice(close.index + close[0].length);
   }
 }
