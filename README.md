@@ -22,8 +22,14 @@ layer 2  headless      src/state.ts        reducer（TranscriptEvent → 状态�
                        src/guards.ts       dev-only assertTranscriptEvent()
                        src/text-utils.ts   mergeStreamText（delta|snapshot）、
                                            splitThinkTags、stabilizeStreamingMarkdown
+                       src/delta-batch.ts  delta 合批（rAF/16ms 窗口，framework 无关；
+                                           相邻同 turn delta 合并、生命周期事件同步冲刷）
+                       src/tool-classify.ts tool 分类器（name+input+result →
+                                           ToolPresentation；含 toolSummary/
+                                           normalizeToolInput/normalizeTodoItems）
+                       src/diff.ts         diff 工具（LCS 行 diff + 400 行上限、
+                                           unified diff 解析、diffStats、路径提取）
                        tests/run.ts        零依赖测试（tsc 编译 + node 直跑）
-                       （未起草）delta 合批（rAF/时间窗）、tool 分类器、diff 工具
 layer 3  components    （未起草）Markdown/CodeBlock、ToolCallCard、
                        ThinkingBlock、DiffView、InteractionCard；
                        theme 走 CSS 变量 token

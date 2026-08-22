@@ -5,3 +5,6 @@ export * from './state.js';
 export * from './selectors.js';
 export * from './guards.js';
 export * from './text-utils.js';
+export * from './diff.js';
+export * from './tool-classify.js';
+export * from './delta-batch.js';

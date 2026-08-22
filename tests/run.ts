@@ -17,6 +17,18 @@ import {
   mergeStreamText,
   splitThinkTags,
   stabilizeStreamingMarkdown,
+  stripAnsi,
+  createTranscriptBatcher,
+  classifyTool,
+  toolSummary,
+  isTodoTool,
+  normalizeToolInput,
+  extractFilePath,
+  normalizeTodoItems,
+  diffLines,
+  parseUnifiedDiff,
+  diffStats,
+  extractUnifiedDiffPath,
 } from '../src/index.js';
 
 let failures = 0;
@@ -208,6 +220,302 @@ check('stabilizeStreamingMarkdown closes dangling fences', () => {
   eq(stabilizeStreamingMarkdown('a\n```js\ncode\n```\nb'), 'a\n```js\ncode\n```\nb', 'balanced untouched');
   eq(stabilizeStreamingMarkdown('~~~~\ncode'), '~~~~\ncode\n~~~~', 'tilde fence length kept');
   eq(stabilizeStreamingMarkdown('plain'), 'plain', 'no fences');
+});
+
+// --- delta batching ----------------------------------------------------------
+
+interface ManualScheduler {
+  ticks: Array<() => void>;
+  cancelled: number;
+  schedule: (cb: () => void) => unknown;
+  cancel: (handle: unknown) => void;
+  fire: () => void;
+}
+
+function manualScheduler(): ManualScheduler {
+  const scheduler: ManualScheduler = {
+    ticks: [],
+    cancelled: 0,
+    schedule: cb => {
+      scheduler.ticks.push(cb);
+      return scheduler.ticks.length - 1;
+    },
+    cancel: () => {
+      scheduler.cancelled += 1;
+    },
+    fire: () => {
+      const pending = scheduler.ticks.splice(0);
+      for (const tick of pending) tick();
+    },
+  };
+  return scheduler;
+}
+
+check('batcher: coalesces same-turn deltas into one flush', () => {
+  const flushed: TranscriptEvent[][] = [];
+  const scheduler = manualScheduler();
+  const batcher = createTranscriptBatcher({
+    onFlush: events => flushed.push(events),
+    schedule: scheduler.schedule,
+    cancel: scheduler.cancel,
+  });
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'a' });
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'b' });
+  batcher.push({ type: 'thinking_delta', turnId: 'r1', delta: 'x' });
+  batcher.push({ type: 'thinking_delta', turnId: 'r1', delta: 'y' });
+  eq(flushed.length, 0, 'nothing before tick');
+  eq(scheduler.ticks.length, 1, 'single scheduled tick');
+  scheduler.fire();
+  eq(flushed, [[
+    { type: 'text_delta', turnId: 'r1', delta: 'ab' },
+    { type: 'thinking_delta', turnId: 'r1', delta: 'xy' },
+  ]], 'coalesced in order');
+  scheduler.fire();
+  eq(flushed.length, 1, 'no empty re-flush');
+});
+
+check('batcher: snapshots and other turns are not merged', () => {
+  const flushed: TranscriptEvent[][] = [];
+  const scheduler = manualScheduler();
+  const batcher = createTranscriptBatcher({
+    onFlush: events => flushed.push(events),
+    schedule: scheduler.schedule,
+    cancel: scheduler.cancel,
+  });
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'a' });
+  batcher.push({ type: 'text_delta', turnId: 'r2', delta: 'b' });
+  batcher.push({ type: 'text_delta', turnId: 'r2', snapshot: 'full' });
+  scheduler.fire();
+  eq(flushed, [[
+    { type: 'text_delta', turnId: 'r1', delta: 'a' },
+    { type: 'text_delta', turnId: 'r2', delta: 'b' },
+    { type: 'text_delta', turnId: 'r2', snapshot: 'full' },
+  ]], 'kept separate');
+});
+
+check('batcher: tool_activity merges output, summary latest-wins', () => {
+  const flushed: TranscriptEvent[][] = [];
+  const scheduler = manualScheduler();
+  const batcher = createTranscriptBatcher({
+    onFlush: events => flushed.push(events),
+    schedule: scheduler.schedule,
+    cancel: scheduler.cancel,
+  });
+  batcher.push({ type: 'tool_activity', turnId: 'r1', toolCallId: 't1', outputDelta: '1\n' });
+  batcher.push({ type: 'tool_activity', turnId: 'r1', toolCallId: 't1', outputDelta: '2\n', summary: 'running' });
+  batcher.push({ type: 'tool_activity', turnId: 'r1', toolCallId: 't2', outputDelta: 'other' });
+  scheduler.fire();
+  eq(flushed, [[
+    { type: 'tool_activity', turnId: 'r1', toolCallId: 't1', outputDelta: '1\n2\n', summary: 'running' },
+    { type: 'tool_activity', turnId: 'r1', toolCallId: 't2', outputDelta: 'other' },
+  ]], 'merged per tool');
+});
+
+check('batcher: lifecycle events flush synchronously in order', () => {
+  const flushed: TranscriptEvent[][] = [];
+  const scheduler = manualScheduler();
+  const batcher = createTranscriptBatcher({
+    onFlush: events => flushed.push(events),
+    schedule: scheduler.schedule,
+    cancel: scheduler.cancel,
+  });
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'done' });
+  batcher.push({ type: 'turn_finished', turnId: 'r1' });
+  eq(flushed, [[
+    { type: 'text_delta', turnId: 'r1', delta: 'done' },
+    { type: 'turn_finished', turnId: 'r1' },
+  ]], 'urgent event carries pending deltas');
+  scheduler.fire();
+  eq(flushed.length, 1, 'stale tick is a no-op');
+});
+
+check('batcher: manual flush and dispose', () => {
+  const flushed: TranscriptEvent[][] = [];
+  const scheduler = manualScheduler();
+  const batcher = createTranscriptBatcher({
+    onFlush: events => flushed.push(events),
+    schedule: scheduler.schedule,
+    cancel: scheduler.cancel,
+  });
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'a' });
+  batcher.flush();
+  eq(flushed, [[{ type: 'text_delta', turnId: 'r1', delta: 'a' }]], 'manual flush');
+  eq(scheduler.cancelled, 1, 'scheduled tick cancelled');
+  batcher.push({ type: 'text_delta', turnId: 'r1', delta: 'b' });
+  batcher.dispose();
+  eq(flushed.length, 2, 'dispose flushes remainder');
+  eq(flushed[1], [{ type: 'text_delta', turnId: 'r1', delta: 'b' }], 'disposed content');
+});
+
+// --- tool classifier ---------------------------------------------------------
+
+check('classifyTool: terminal across host tool names', () => {
+  eq(
+    classifyTool({ name: 'Bash', input: { command: 'ls -la' }, result: 'total 8\n' }),
+    { kind: 'terminal', command: 'ls -la', output: 'total 8' },
+    'claude-style Bash with string result',
+  );
+  eq(
+    classifyTool({
+      name: 'terminal',
+      input: { context: 'pwd' },
+      result: { output: '/home' },
+    }),
+    { kind: 'terminal', command: 'pwd', output: '/home' },
+    'hermes terminal with context key',
+  );
+  eq(
+    classifyTool({
+      name: 'execute_code',
+      input: { code: 'print(1)' },
+      result: { lines: ['1', '2'] },
+    }),
+    { kind: 'terminal', command: 'print(1)', output: '1\n2' },
+    'lines array joined',
+  );
+});
+
+check('classifyTool: file edits carry path and diff', () => {
+  eq(
+    classifyTool({ name: 'Edit', input: { file_path: '/a/b.ts', old_string: 'x', new_string: 'y' } }),
+    { kind: 'file_edit', filePath: '/a/b.ts' },
+    'claude Edit',
+  );
+  eq(
+    classifyTool({
+      name: 'edit_file',
+      input: { path: 'src/x.py' },
+      result: { inline_diff: '-a\n+b' },
+    }),
+    { kind: 'file_edit', filePath: 'src/x.py', diff: '-a\n+b' },
+    'hermes edit_file with inline diff',
+  );
+});
+
+check('classifyTool: search variants normalize query and results', () => {
+  eq(
+    classifyTool({ name: 'Grep', input: { pattern: 'TODO', path: 'src' } }),
+    { kind: 'search', query: 'TODO in src', results: [] },
+    'grep',
+  );
+  eq(
+    classifyTool({
+      name: 'web_search',
+      input: { search_term: 'zig build' },
+      result: { results: [{ title: 'Zig', url: 'https://z.org', snippet: 's' }, { name: 'no url' }] },
+    }),
+    {
+      kind: 'search',
+      query: 'zig build',
+      results: [{ title: 'Zig', url: 'https://z.org', snippet: 's' }],
+    },
+    'web_search maps and filters results',
+  );
+});
+
+check('classifyTool: image, todo, and generic fallback', () => {
+  eq(
+    classifyTool({ name: 'image_generate', result: { image: 'data:image/png;base64,x' } }),
+    { kind: 'image', url: 'data:image/png;base64,x' },
+    'image data uri',
+  );
+  eq(
+    classifyTool({
+      name: 'TodoWrite',
+      input: { todos: [{ content: 'a', status: 'in_progress' }, { content: '', status: 'x' }] },
+    }),
+    { kind: 'todo', todos: [{ content: 'a', status: 'in_progress' }] },
+    'todos normalized, empty dropped',
+  );
+  eq(
+    classifyTool({ name: 'mystery', result: { anything: 1 } }),
+    { kind: 'generic', text: '{\n  "anything": 1\n}' },
+    'generic printable result',
+  );
+});
+
+check('tool input helpers: normalize, path keys, todo names', () => {
+  eq(normalizeToolInput('{"a":1}'), { a: 1 }, 'stringified json parsed');
+  eq(normalizeToolInput('not json'), 'not json', 'plain string kept');
+  eq(extractFilePath({ notebook_path: '/n.ipynb' }), '/n.ipynb', 'notebook_path');
+  eq(extractFilePath({ x: 1 }), undefined, 'no path key');
+  eq(isTodoTool('TodoWrite'), true, 'TodoWrite');
+  eq(isTodoTool('mcp__x__update_todo_list'), true, 'mcp suffix');
+  eq(isTodoTool('Read'), false, 'not todo');
+  eq(
+    normalizeTodoItems({ items: [{ content: 'a', status: 'completed' }] }),
+    [{ content: 'a', status: 'completed' }],
+    'nested items key',
+  );
+});
+
+check('toolSummary: one-line header per tool family', () => {
+  eq(toolSummary('Bash', { command: 'npm test' }), 'npm test', 'bash command');
+  eq(toolSummary('Edit', { file_path: '/a/b.ts' }), '/a/b.ts', 'edit path');
+  eq(toolSummary('Grep', { pattern: 'x', path: 'src' }), 'x in src', 'grep');
+  eq(toolSummary('TodoWrite', { todos: [] }), 'Update task list', 'todo');
+  eq(toolSummary('WebFetch', { url: 'https://a.io' }), 'https://a.io', 'webfetch');
+  eq(toolSummary('mystery', { a: 1 }), '{"a":1}', 'compact json fallback');
+  eq(toolSummary('mystery', 'nope'), '', 'non-object input');
+});
+
+// --- diff utilities ---------------------------------------------------------
+
+check('diffLines: LCS keeps context, marks changes', () => {
+  eq(
+    diffLines('a\nb\nc', 'a\nx\nc'),
+    [
+      { kind: 'context', text: 'a' },
+      { kind: 'removed', text: 'b' },
+      { kind: 'added', text: 'x' },
+      { kind: 'context', text: 'c' },
+    ],
+    'replace middle line',
+  );
+  eq(
+    diffLines('', 'a'),
+    [{ kind: 'removed', text: '' }, { kind: 'added', text: 'a' }],
+    'empty old side',
+  );
+  eq(diffLines('same', 'same'), [{ kind: 'context', text: 'same' }], 'identical');
+});
+
+check('diffLines: over the cap degrades to removed/added runs', () => {
+  const oldText = Array.from({ length: 401 }, (_, i) => `line${i}`).join('\n');
+  const lines = diffLines(oldText, 'new');
+  eq(lines.length, 402, 'all lines present');
+  eq(lines[0], { kind: 'removed', text: 'line0' }, 'old side removed');
+  eq(lines.at(-1), { kind: 'added', text: 'new' }, 'new side added');
+  eq(lines.some(l => l.kind === 'context'), false, 'no context computed');
+});
+
+check('diffStats counts added and removed lines', () => {
+  eq(diffStats(diffLines('a\nb', 'a\nc\nd')), { added: 2, removed: 1 }, 'stats');
+});
+
+check('parseUnifiedDiff classifies lines and strips ANSI', () => {
+  const diff = [
+    'diff --git a/src/x.ts b/src/x.ts',
+    'index 123..456 100644',
+    '--- a/src/x.ts',
+    '+++ b/src/x.ts',
+    '@@ -1,2 +1,2 @@',
+    ' unchanged',
+    '-\u001b[31mold\u001b[0m',
+    '+new',
+  ].join('\n');
+  eq(
+    parseUnifiedDiff(diff).map(l => l.kind),
+    ['meta', 'meta', 'meta', 'meta', 'hunk', 'context', 'removed', 'added'],
+    'kinds',
+  );
+  eq(parseUnifiedDiff(diff)[6].text, '-old', 'ansi stripped');
+  eq(extractUnifiedDiffPath(diff), 'src/x.ts', 'path from +++ header');
+});
+
+check('stripAnsi removes color and cursor sequences', () => {
+  eq(stripAnsi('\u001b[31mred\u001b[0m plain\u001b[2K'), 'red plain', 'stripped');
+  eq(stripAnsi('no escapes'), 'no escapes', 'untouched');
 });
 
 // --- guards -----------------------------------------------------------------

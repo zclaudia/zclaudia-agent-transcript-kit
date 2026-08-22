@@ -97,13 +97,16 @@ Context）。adapter 化 = 把"gw 事件 → TranscriptEvent"抽成独立模块�
 kit + delta 合批工具后白得性能优化。UI 层（手写 CSS、移动端手势）不强求接
 layer 3。
 
-## Layer 2 剩余项（参考实现位置）
+## Layer 2 剩余项（已全部完成，2026-08-22）
 
-| 待做 | 参考实现 |
-| --- | --- |
-| delta 合批（rAF/时间窗，framework 无关） | intellij `agent-daemon/src/ui/transport.ts`（16ms 批窗口）；zclaudia `services/message-handlers/delta-buffer.ts`（rAF 合批）；hermes 无（受益方） |
-| tool 分类器（name+input+result → `ToolPresentation`） | hermes `lib/stream-model.ts` 的 `parseCompletedTool()`；intellij `ui/transcript/tool-presentation.ts`（242 行，图标/摘要/路径提取/ANSI 剥离）；zclaudia `tool-call/toolClassifiers.ts`（94）+ `toolFormatters.ts`（218） |
-| diff 工具（解析/逐行着色/上限） | hermes `components/DiffLines.tsx`（27，ANSI 剥离）；intellij `ui/transcript/diff.tsx`（94，`diffLines()` + 400 行上限）；zclaudia `components/renderers/DiffViewer.tsx`（195） |
+| 已做 | kit 位置 | 参考实现 |
+| --- | --- | --- |
+| delta 合批（rAF/时间窗，framework 无关） | `src/delta-batch.ts`（`createTranscriptBatcher`：scheduler 可注入，默认 rAF → setTimeout(16) 回退；相邻同 turn 的 text/thinking delta 与同 tool 的 activity 合并；生命周期事件同步冲刷保证 finalize 前状态齐全） | intellij `agent-daemon/src/ui/transport.ts`（16ms 批窗口）；zclaudia `services/message-handlers/delta-buffer.ts`（rAF 合批）；hermes 无（受益方） |
+| tool 分类器（name+input+result → `ToolPresentation`） | `src/tool-classify.ts`（`classifyTool`/`toolSummary` 等；工具名同时覆盖 Claude 系与 pi-agent 系；带 hermes 式结果截断上限） | hermes `lib/stream-model.ts` 的 `parseCompletedTool()`；intellij `ui/transcript/tool-presentation.ts`；zclaudia `tool-call/toolClassifiers.ts` + `toolFormatters.ts` |
+| diff 工具（解析/逐行着色/上限） | `src/diff.ts`（`diffLines` LCS + 400 行上限降级、`parseUnifiedDiff`（先剥 ANSI）、`diffStats`、`extractUnifiedDiffPath`）；`stripAnsi` 进了 `src/text-utils.ts` | hermes `components/DiffLines.tsx`；intellij `ui/transcript/diff.tsx`；zclaudia `components/renderers/DiffViewer.tsx` |
+
+注：intellij 图标映射（lucide `toolIcon()`）与代码高亮语言映射（`languageForPath`）
+是 UI 关注点，留给 layer 3 / host。
 
 ## Layer 3 备忘
 
@@ -118,7 +121,7 @@ layer 3。
 ## 环境备忘
 
 - 本包自包含：`pnpm install && pnpm test` 即可，无其他前置。
-- 本包尚无远程仓库；跨机器前先 push。
+- 远程仓库：`git@github.com:zclaudia/zclaudia-agent-transcript-kit.git`。
 - hermes 编译依赖 `~/.hermes/hermes-agent` checkout（见 Host 3）。
 - 三个 host 仓库均在原机器 `~/Code/` 下；zclaudia 的 gateway 在其同级目录
   `../zclaudia-gateway/`。

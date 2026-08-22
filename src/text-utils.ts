@@ -64,6 +64,16 @@ export function splitThinkTags(text: string): ThinkSplit {
 }
 
 /**
+ * Strip ANSI escape sequences (colors, cursor movement, erase) from terminal
+ * output — every host restyles tool output itself. Covers CSI sequences
+ * (`ESC [ ... letter`), the form all three apps were stripping.
+ */
+export function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\u001b\[[0-9;]*[A-Za-z]/g, '');
+}
+
+/**
  * Close a dangling code fence so react-markdown does not restyle the whole
  * tail of a streaming message as code. Applied at render time only — the
  * stored text is never modified.
