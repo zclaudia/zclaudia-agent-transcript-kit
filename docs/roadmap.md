@@ -10,7 +10,35 @@
 2. **layer-3 transcript 渲染件**：前置是 zclaudia 渲染件 store 依赖 props 化
 3. **hermes 接入**：最后做，可只接 layer 1+2
 
-## Host 1：intellij-idea-coding-agent-plugin（第一站）
+## Host 1：intellij-idea-coding-agent-plugin（第一站，核心已完成 2026-08-23）
+
+**已完成**（intellij 仓库分支 `transcript-kit-adapter`，计划文档
+`docs/superpowers/plans/2026-08-23-transcript-kit-adapter.md`）：
+
+- `agent-daemon` 以 `file:../../../zclaudia-agent-transcript-kit` 本地依赖接入
+  （kit 发 npm 后切换 semver）；边界脚本放行（agent-daemon 是 private 包）。
+- 新增 `src/ui/transcript-adapter.ts`：`ProviderRuntimeEvent` → `TranscriptEvent`
+  （assistant→snapshot、assistant_delta→delta、thinking（带 signature/redacted）、
+  tool 生命周期含 legacy 无 toolUseId 的确定性生成 id）；init/mode_transition/
+  provider_error 留 host。
+- `state.ts` 重写：每 session 一个 kit `TranscriptState` 真源 + `projectSession()`
+  投影出旧 `PlaygroundMessage`/`PlaygroundToolCall`（UI 零改动）；vendored 的
+  `mergeAssistantContent` 内部/`appendBlock`/`upsertAssistant`/`applyRuntimeEvent`
+  全部删除；`runErrors` overlay 承载 provider_error 与断线 reconcile 提示。
+  采纳的 kit 语义变化：run_failed/aborted 取消 running tools（投影为 error）、
+  重放 tool_started 严格幂等。
+- `message-content.ts` 变为 kit `splitThinkTags` 之上的展示薄封装
+  （kit 为此新增 `thinkingSegments`）；`MessageItem` 改用 kit
+  `stabilizeStreamingMarkdown`。
+- 195 个 daemon 测试全绿，vendored 契约测试断言零修改；typecheck×2、
+  build:ui、边界脚本均过。
+
+**后续阶段（未做）**：`protocol.ts` 交互联合 → kit `InteractionRequest` 四 kind
++ 交互卡片 props 迁移；`transcript/diff.tsx`、`tool-presentation.ts` 内部换
+kit `diffLines`/`stripAnsi`/`toolSummary`；`AgentPlaygroundApp.tsx` 消息泵接
+kit `createTranscriptBatcher`。
+
+以下为原始调研记录：
 
 仓库：pnpm monorepo；UI 是 JCEF 里的 React 应用，住在 `packages/agent-daemon/`。
 
