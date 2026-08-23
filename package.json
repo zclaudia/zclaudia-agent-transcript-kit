@@ -8,8 +8,7 @@
     "url": "git+https://github.com/zclaudia/zclaudia-agent-transcript-kit.git"
   },
   "publishConfig": {
-    "access": "public",
-    "provenance": true
+    "access": "public"
   },
   "packageManager": "pnpm@9.15.0",
   "type": "module",
