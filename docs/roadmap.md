@@ -32,10 +32,24 @@
 - 195 个 daemon 测试全绿，vendored 契约测试断言零修改；typecheck×2、
   build:ui、边界脚本均过。
 
-**后续阶段（未做）**：`protocol.ts` 交互联合 → kit `InteractionRequest` 四 kind
-+ 交互卡片 props 迁移；`transcript/diff.tsx`、`tool-presentation.ts` 内部换
-kit `diffLines`/`stripAnsi`/`toolSummary`；`AgentPlaygroundApp.tsx` 消息泵接
-kit `createTranscriptBatcher`。
+**后续阶段（已完成 2026-08-23，分支 `station1-followups`）**：
+
+- `tool-presentation.ts`/`diff.tsx` 内部换 kit（`toolSummary`/`stripAnsi`/
+  `asRecord`/`extractFilePath`/`diffLines`/`diffStats`）；host 只留展示策略
+  （图标、chip、语言映射、更宽的 todo 匹配）。
+- 消息泵合批：`message-pump.ts` 把流式 delta 按帧（rAF/16ms）合并为一次
+  `server_batch` dispatch——**注意 intellij 没有用 kit 的
+  `createTranscriptBatcher`**：其 wire→TranscriptEvent 翻译在 reducer 内部，
+  合批只能上移一层到 server message 粒度（不合并内容，inspector 粒度保留）。
+  kit batcher 适用于翻译在泵侧的 host（hermes/zclaudia）。
+- 交互存储进 kit：wire 请求翻译为 kit `InteractionRequest`
+  （permission→approval、question、plan_approval→plan_review、
+  elicitation→form），wire 原对象走 `ext.wire`；`session.interactions` 变投影，
+  host 的增删/turn 结束清理逻辑删除（kit endTurn 接管）。交互卡片 UI 本体
+  仍消费 wire 对象——共享 InteractionCard 是 layer 3 的活。
+- 全程 203 测试零断言修改；真机冒烟含审批卡 Allow 回路。
+
+**Host 1 剩余**：无（layer-3 组件化后再回来换卡片）。
 
 以下为原始调研记录：
 
