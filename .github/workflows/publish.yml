@@ -1,4 +1,4 @@
-# Publishes @zclaudia/transcript-kit to npm when a v* tag is pushed.
+# Publishes @zclaudia/agent-transcript-kit to npm when a v* tag is pushed.
 #
 # Release flow:
 #   1. Bump "version" in package.json (and commit).

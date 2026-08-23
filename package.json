@@ -1,5 +1,5 @@
 {
-  "name": "@zclaudia/transcript-kit",
+  "name": "@zclaudia/agent-transcript-kit",
   "version": "0.1.0",
   "description": "Shared agent-transcript view model, headless reducer, and text utilities",
   "license": "MIT",

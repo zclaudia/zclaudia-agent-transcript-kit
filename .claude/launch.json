@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "agent-daemon",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "/Users/zhvala/SourceCode/intellij-idea-coding-agent-plugin/packages/agent-daemon/dist/main.js",
+        "--plugin",
+        "/Users/zhvala/SourceCode/intellij-idea-coding-agent-plugin/agents/codex",
+        "--port",
+        "4310",
+        "--cwd",
+        "/Users/zhvala/SourceCode/zclaudia-agent-transcript-kit"
+      ],
+      "port": 4310
+    }
+  ]
+}

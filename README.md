@@ -64,7 +64,7 @@ seq 去重、断线对账都留在 host 侧，进入 kit 的事件已经归属�
    `{decision, scope?, updatedInput?, message?}`；请求侧 `allowedScopes` /
    `editableInput` / `timeoutSeconds` / `timeoutBehavior` 驱动 UI，
    未声明的能力不渲染、adapter 出口忽略。
-4. **包归属**：发 `@zclaudia` scope（如 `@zclaudia/transcript-kit`）、
+4. **包归属**：发 `@zclaudia` scope（如 `@zclaudia/agent-transcript-kit`）、
    源码独立仓库，不进 zclaudia 应用 monorepo。kit 保持零依赖，
    不 import 任何 host 生态类型；adapter 全部住 host 侧。
 5. **运行时校验**：dev-only 手写守卫（`assertTranscriptEvent()`），
