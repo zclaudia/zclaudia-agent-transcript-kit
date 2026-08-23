@@ -15,8 +15,7 @@
 **已完成**（intellij 仓库分支 `transcript-kit-adapter`，计划文档
 `docs/superpowers/plans/2026-08-23-transcript-kit-adapter.md`）：
 
-- `agent-daemon` 以 `file:../../../zclaudia-agent-transcript-kit` 本地依赖接入
-  （kit 发 npm 后切换 semver）；边界脚本放行（agent-daemon 是 private 包）。
+- `agent-daemon` 以 npm 依赖 `^0.1.0` 接入  （首发 0.1.0 已上 npm，trusted publishing 已配）；边界脚本放行（agent-daemon 是 private 包）。
 - 新增 `src/ui/transcript-adapter.ts`：`ProviderRuntimeEvent` → `TranscriptEvent`
   （assistant→snapshot、assistant_delta→delta、thinking（带 signature/redacted）、
   tool 生命周期含 legacy 无 toolUseId 的确定性生成 id）；init/mode_transition/
