@@ -81,7 +81,28 @@
 **注意**：仓库有 `scripts/check-package-boundaries.mjs` 强制包边界（publishable
 包不得 workspace 依赖、不得 import `@zclaudia/shared`）；引入本包时确认规则放行。
 
-## Host 2：zclaudia
+## Host 2：zclaudia（核心已完成 2026-08-24）
+
+**已完成**（zclaudia 仓库分支 `transcript-kit-runstore`）：
+
+- `runStore` 改造：每个 run 一个单 turn 的 kit `TranscriptState`
+  （`runTranscripts[runId]`，turnId=runId）；`runContentBlocks`/
+  `activeToolCalls`/`toolCallsHistory` 全部变投影，action 名与签名不变，
+  selector/`finalizeRunToMessage`/全部测试零改动。手写的尾部文本合并、
+  tool 幂等、块顺序逻辑删除。host 保留：结果 first-wins 与 activity
+  仅运行中的守卫（kit 是 latest-wins）、`ToolEffect` side-map
+  （kit 愿望单：tool 事件加 `ext` 槽）。
+- `delta-buffer` 换 kit `createTranscriptBatcher`：text delta 按帧合并
+  不变；**tool_use 改走同一队列**（urgent 同步冲刷缓冲文本），修复了
+  "delta 缓冲 + tool 块立即 append" 的同帧顺序倒置隐患（新增回归测试
+  钉住顺序）。tool_result/tool_activity 不建块，保持直连。
+- 4383 测试（unit/hooks/ui）通过，仅新增 1 条回归测试。
+
+**Host 2 剩余**：`interaction_todo_update` → marker 降级（决议 #1，待
+UI 有消费点再做）；断线对账（sessionSync/heartbeat-reconciliation）
+按设计留 host；layer-3 前置的 props 化清单见下。
+
+以下为原始调研记录：
 
 **adapter（client 侧）**：`apps/desktop/src/services/messageHandler.ts`（307 行，
 `ServerMessage` 分发入口）与 `services/message-handlers/run-messages.ts`（392 行，
