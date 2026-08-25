@@ -1,0 +1,199 @@
+/*
+ * Transcript renderer styles.
+ *
+ * The theming interface is the `--ztk-*` custom properties below: a host maps
+ * its own design tokens onto them once, on any ancestor, and every renderer
+ * follows. That is the greatest common denominator across the hosts — two use
+ * Tailwind, one hand-writes CSS — and it is why these components ship plain
+ * class names instead of utility classes, which would require every consumer
+ * to scan this package with their own Tailwind build.
+ *
+ * The defaults are a neutral dark palette so the components are legible
+ * before a host maps anything.
+ */
+
+:root {
+  --ztk-fg: #e8e6e3;
+  --ztk-fg-muted: #9c9791;
+  --ztk-bg-subtle: #1c1b19;
+  --ztk-border: #2e2c29;
+  --ztk-radius: 0.5rem;
+  --ztk-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --ztk-font-size-sm: 0.75rem;
+
+  /* Code surface + syntax palette. A host that already themes code (see the
+     kit README) maps these onto its own --code-* tokens. */
+  --ztk-code-bg: #141312;
+  --ztk-code-fg: var(--ztk-fg);
+  --ztk-code-comment: #7d7871;
+  --ztk-code-punctuation: #9c9791;
+  --ztk-code-keyword: #ad90d5;
+  --ztk-code-string: #6bc799;
+  --ztk-code-function: #6ca0e5;
+  --ztk-code-number: #e39663;
+  --ztk-code-class: #dcc06a;
+  --ztk-code-variable: #63b6c4;
+  --ztk-code-tag: #dc726a;
+  --ztk-code-attr: #e39663;
+  --ztk-code-regex: #63b6c4;
+  --ztk-code-deleted: #dc726a;
+  --ztk-code-inserted: #6bc799;
+}
+
+/* ── Code block ─────────────────────────────────────────────── */
+
+.ztk-code-block {
+  border: 1px solid var(--ztk-border);
+  border-radius: var(--ztk-radius);
+  overflow: hidden;
+  max-width: 100%;
+}
+
+.ztk-code-block__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--ztk-bg-subtle);
+  border-bottom: 1px solid var(--ztk-border);
+}
+
+.ztk-code-block__language {
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg-muted);
+  font-weight: 500;
+}
+
+.ztk-code-block__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ztk-code-block__action {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ztk-code-block__action:hover {
+  color: var(--ztk-fg);
+}
+
+.ztk-code-block__action--done {
+  color: var(--ztk-code-inserted);
+}
+
+.ztk-code-block__body {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: var(--ztk-code-bg);
+}
+
+.ztk-code-block__pre {
+  margin: 0;
+  padding: 0.75rem;
+  font-family: var(--ztk-font-mono);
+  font-size: var(--ztk-font-size-sm);
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--ztk-code-fg);
+}
+
+/* ── Syntax tokens ──────────────────────────────────────────────
+   Prism-style class names, which is what host highlighters emit when asked
+   for classes rather than inline styles. Anything unmatched inherits
+   --ztk-code-fg. */
+
+.ztk-code .token.comment,
+.ztk-code .token.prolog,
+.ztk-code .token.doctype,
+.ztk-code .token.cdata {
+  color: var(--ztk-code-comment);
+  font-style: italic;
+}
+
+.ztk-code .token.punctuation {
+  color: var(--ztk-code-punctuation);
+}
+
+.ztk-code .token.keyword,
+.ztk-code .token.important,
+.ztk-code .token.atrule,
+.ztk-code .token.rule {
+  color: var(--ztk-code-keyword);
+}
+
+.ztk-code .token.string,
+.ztk-code .token.char,
+.ztk-code .token.attr-value,
+.ztk-code .token.template-string {
+  color: var(--ztk-code-string);
+}
+
+.ztk-code .token.function,
+.ztk-code .token.method,
+.ztk-code .token.function-name {
+  color: var(--ztk-code-function);
+}
+
+.ztk-code .token.number,
+.ztk-code .token.boolean,
+.ztk-code .token.constant,
+.ztk-code .token.symbol,
+.ztk-code .token.unit {
+  color: var(--ztk-code-number);
+}
+
+.ztk-code .token.class-name,
+.ztk-code .token.builtin,
+.ztk-code .token.namespace,
+.ztk-code .token.type-class-name {
+  color: var(--ztk-code-class);
+}
+
+.ztk-code .token.variable,
+.ztk-code .token.property,
+.ztk-code .token.parameter {
+  color: var(--ztk-code-variable);
+}
+
+.ztk-code .token.tag,
+.ztk-code .token.selector {
+  color: var(--ztk-code-tag);
+}
+
+.ztk-code .token.attr-name,
+.ztk-code .token.operator,
+.ztk-code .token.entity,
+.ztk-code .token.url {
+  color: var(--ztk-code-attr);
+}
+
+.ztk-code .token.regex {
+  color: var(--ztk-code-regex);
+}
+
+.ztk-code .token.deleted {
+  color: var(--ztk-code-deleted);
+}
+
+.ztk-code .token.inserted {
+  color: var(--ztk-code-inserted);
+}
+
+.ztk-code .token.bold {
+  font-weight: 600;
+}
+
+.ztk-code .token.italic {
+  font-style: italic;
+}

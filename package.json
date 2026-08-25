@@ -1,7 +1,7 @@
 {
   "name": "@zclaudia/agent-transcript-kit",
   "version": "0.1.1",
-  "description": "Shared agent-transcript view model, headless reducer, and text utilities",
+  "description": "Shared agent-transcript view model, headless reducer, text utilities, and optional React renderers",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -19,18 +19,32 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./transcript.css": "./dist/react/transcript.css"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-assets.mjs",
     "test": "tsc -p tsconfig.test.json && node dist-test/tests/run.js",
     "prepublishOnly": "pnpm test && pnpm build"
   },
   "devDependencies": {
+    "@types/react": "^19.2.17",
     "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   }
 }

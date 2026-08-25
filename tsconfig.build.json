@@ -8,6 +8,11 @@
     "outDir": "dist",
     "rootDir": "src"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/mapping-fixtures.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ],
+  "exclude": [
+    "src/mapping-fixtures.ts"
+  ]
 }
