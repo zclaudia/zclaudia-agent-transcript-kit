@@ -170,6 +170,42 @@ layer 3。
 注：intellij 图标映射（lucide `toolIcon()`）与代码高亮语言映射（`languageForPath`）
 是 UI 关注点，留给 layer 3 / host。
 
+## Layer 3 前置：zclaudia props 化（已完成 2026-08-25）
+
+四刀做完，两个渲染件（`ToolCallCard`、`CodeBlock`）host 依赖归零（含类型），
+可直接搬进 kit：
+
+1. **ToolCallItem 拆分**：纯 `ToolCallCard`（头部/状态/展开/工具体）+ connected
+   `ToolCallItem`（session/交互 store 查找、能力装配）。能力走 props：
+   `onSendToBackground` / `runInTerminal`，存在即渲染入口。
+   埋在按钮里的 5 个全局依赖上移为 host 钩子 `useRunInTerminal()`
+   （无远程终端时返回 undefined）。
+2. **MessageList 能力收拢**：新增 `TranscriptCapabilities` context——**渲染件
+   自己的** context（定义权随组件走，区别于 host 的 ConnectionContext /
+   ThemeContext）；代码块深埋 markdown 映射、props 传不进，context 是唯一路径。
+   `CodeBlock` 独立成文件并消费它，其中**第二份逐字重复的终端粘贴逻辑被删除**。
+   MessageList 保留容器级 store（filePushStore）——列表本身不是抽取目标。
+3. **主题 token 化**：唯一残留的非 token 主题依赖是代码高亮的
+   `oneDark`/`oneLight` JS style 对象（5 个主题只有 2 套配色，且绑死
+   react-syntax-highlighter）。改为每主题 14 个 `--code-*` token（锚定既有
+   hue 轴；bg/comment/punctuation 跟随各主题 hue 轴）+ `.zc-code` 规则映射
+   Prism 标准 token 类，`useInlineStyles={false}`。**颜色契约共享、高亮实现
+   由 host 选**——hermes 的 highlight.js 也能对齐同一套变量。
+   副作用：CodeBlock 不再需要任何主题输入，`isDarkCode` 退出能力接口。
+4. **类型换 kit**：`ToolCallCard` 改吃 `ToolCallView`；`toolCallView.ts` 做
+   host→kit 适配（实时 store 与持久化 `message.toolCalls` 同形状，共用一个
+   适配器；`ToolEffect` 走 kit 的 `ext` 开放槽）；转换在 connected wrapper 内
+   memo 化。classifier/formatter 改吃 kit 的**开放** `ToolSemantic`。
+   既有测试抓到一个真 bug：`isError` 是独立字段，持久化行可能是
+   `completed + isError`，映射必须让它压过 status（已加回归测试）。
+
+**纯度契约有哨兵测试**：`ToolCallCard.test.tsx` / `CodeBlock.test.tsx` 零
+store/context mock 渲染——组件还能不能抽走，跑这两个文件就知道。
+
+**layer 3 开工前剩余**：`MessageList` 里的 `ThinkingBlock` / `SegmentedContent`
+等仍内联在容器文件里（未拆分，但已无 host 依赖）；`InteractionItem` 未动
+（等 kit 的 InteractionCard 设计）。
+
 ## Layer 3 备忘
 
 - 只抽 transcript 渲染件：Markdown/CodeBlock、ToolCallCard、ThinkingBlock、
