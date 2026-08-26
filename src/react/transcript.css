@@ -20,6 +20,8 @@
   --ztk-radius: 0.5rem;
   --ztk-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --ztk-font-size-sm: 0.75rem;
+  /* Code text sizes independently of chrome: hosts often let readers scale it. */
+  --ztk-code-font-size: var(--ztk-font-size-sm);
 
   /* Code surface + syntax palette. A host that already themes code (see the
      kit README) maps these onto its own --code-* tokens. */
@@ -102,7 +104,7 @@
   margin: 0;
   padding: 0.75rem;
   font-family: var(--ztk-font-mono);
-  font-size: var(--ztk-font-size-sm);
+  font-size: var(--ztk-code-font-size);
   line-height: 1.5;
   white-space: pre;
   color: var(--ztk-code-fg);

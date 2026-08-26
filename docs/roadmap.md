@@ -206,6 +206,25 @@ store/context mock 渲染——组件还能不能抽走，跑这两个文件就�
 等仍内联在容器文件里（未拆分，但已无 host 依赖）；`InteractionItem` 未动
 （等 kit 的 InteractionCard 设计）。
 
+## Layer 3（进行中，2026-08-26 起）
+
+**已完成**：
+- kit 加 `/react` 子路径入口（core 保持零依赖、React 为可选 peer）、
+  `transcript.css` 资产、`scripts/copy-assets.mjs`。
+- `TranscriptCapabilities`（能力 context，kit 定义）+ 首个组件 `CodeBlock`。
+- 三条架构决议（见 README）：**入口分离**、**零第三方运行时依赖**
+  （高亮器由 host 注入、图标内联 SVG）、**`--ztk-*` CSS 变量做主题接口**
+  （不用 Tailwind 工具类——那会要求每个消费者的 Tailwind 扫描本包，
+  且 hermes 手写 CSS）。
+- zclaudia 已消费：`CodeBlock`/能力 context 全部来自 kit，host 只留
+  Prism 注入器 + 一次性 token 映射（5 个主题全跟随）。2808 UI 测试通过，
+  含新增的高亮器契约测试（单一 `<pre>`、token class 而非内联样式）。
+
+**待办**：kit 发布 0.2.0 后把 zclaudia 的 `file:` 依赖切回 `^0.2.0`；
+搬 ToolCallCard（依赖 icon/classifier/formatter，需先定这些的注入方式）、
+ThinkingBlock、DiffView、InteractionCard；kit 自身的组件测试
+（现由 host 的纯度测试代跑）。
+
 ## Layer 3 备忘
 
 - 只抽 transcript 渲染件：Markdown/CodeBlock、ToolCallCard、ThinkingBlock、

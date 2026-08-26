@@ -79,8 +79,56 @@ reconnecting mid-stream still renders.
   ToolPresentation` for hosts without wire-level knowledge.
 - `diff` — LCS line diff with a 400-line cap, unified-diff parsing, ANSI stripping.
 - `text-utils` — `mergeStreamText`, `splitThinkTags`, `stabilizeStreamingMarkdown`, `stripAnsi`.
+- `react` (subpath) — transcript renderers; see **React renderers** below.
 - `guards` — dev-only `assertTranscriptEvent` (enable via `applyTranscriptEvent`'s
   `assertEvents`; skip in production builds).
+
+## React renderers
+
+Transcript components live behind a subpath so that consumers of layers 1–2
+never acquire a React dependency:
+
+```tsx
+import { CodeBlock, TranscriptCapabilitiesProvider } from '@zclaudia/agent-transcript-kit/react';
+import '@zclaudia/agent-transcript-kit/transcript.css';
+
+<TranscriptCapabilitiesProvider value={{ runInTerminal, highlightCode }}>
+  <CodeBlock language="bash">npm test</CodeBlock>
+</TranscriptCapabilitiesProvider>;
+```
+
+The renderers carry no runtime dependencies of their own. What differs between
+hosts is injected through `TranscriptCapabilities`, and every field is optional
+— an absent capability removes the affordance rather than breaking the render:
+
+- `runInTerminal(command)` — enables "Run in terminal" on shell code blocks.
+- `highlightCode(code, language)` — the host's syntax highlighter. The kit
+  ships none because hosts disagree (Prism, highlight.js, none), and bundling
+  one would duplicate what a host already has. Return inline content with
+  Prism-style token classes (`token keyword`, …); the kit owns the
+  `<pre><code>` wrapper, so do not nest one, and emit classes rather than
+  inline styles so the theme can color them.
+
+### Theming
+
+`transcript.css` defines the renderers' looks in terms of `--ztk-*` custom
+properties and ships a neutral dark default. A host themes every renderer by
+mapping its own tokens onto that contract once, on any ancestor:
+
+```css
+:root {
+  --ztk-bg-subtle: hsl(var(--secondary));
+  --ztk-border: hsl(var(--border));
+  --ztk-code-bg: hsl(var(--code-bg));
+  --ztk-code-keyword: hsl(var(--code-keyword));
+  /* … */
+}
+```
+
+Custom properties rather than utility classes: utilities would require every
+consumer's Tailwind build to scan this package, and not every host uses
+Tailwind. Because the mapping resolves at use time, a host with several themes
+gets all of them from one mapping.
 
 ## Package boundaries
 
