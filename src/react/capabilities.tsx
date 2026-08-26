@@ -26,6 +26,13 @@ export interface TranscriptCapabilities {
    * `token string`, …) so the kit stylesheet colors them from the theme.
    */
   highlightCode?: (code: string, language: string) => ReactNode | undefined;
+
+  /**
+   * Icon for a tool, by tool name. Hosts keep their own icon sets and mappings
+   * (and their own icon component), so the kit renders whatever comes back and
+   * falls back to a generic glyph when this is absent or returns nothing.
+   */
+  toolIcon?: (toolName: string) => ReactNode | undefined;
 }
 
 const TranscriptCapabilitiesContext = createContext<TranscriptCapabilities>({});

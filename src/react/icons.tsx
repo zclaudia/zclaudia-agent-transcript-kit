@@ -52,3 +52,63 @@ export function CheckIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function WrenchIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+    </svg>
+  );
+}
+
+export function SpinnerIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)} className={`ztk-spin${props.className ? ` ${props.className}` : ''}`}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
+  );
+}
+
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="M21.801 10A10 10 0 1 1 17 3.335" />
+      <path d="m9 11 3 3L22 4" />
+    </svg>
+  );
+}
+
+export function XCircleIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <circle cx="12" cy="12" r="10" />
+      <path d="m15 9-6 6M9 9l6 6" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
+export function SendToBackIcon(props: IconProps) {
+  return (
+    <svg {...svgProps(props)}>
+      <rect x="14" y="14" width="8" height="8" rx="2" />
+      <rect x="2" y="2" width="8" height="8" rx="2" />
+      <path d="M7 14v1a2 2 0 0 0 2 2h1M14 7h1a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}

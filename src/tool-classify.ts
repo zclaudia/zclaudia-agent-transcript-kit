@@ -18,6 +18,7 @@ import type {
   SearchResultView,
   TodoItemView,
   ToolPresentation,
+  ToolSemantic,
 } from './transcript.js';
 
 /** Some providers send stringified JSON instead of objects; normalize once. */
@@ -53,12 +54,88 @@ export function extractFilePath(input: unknown): string | undefined {
   return undefined;
 }
 
+/**
+ * Agent tools reach a transcript under many names for the same job: a host's
+ * built-in `TodoWrite`, or the same capability bridged over MCP as
+ * `mcp__server__update_todo_list`. Bridges prefix and separate differently, so
+ * matching is on the terminating bare name.
+ */
+function hasToolSuffix(name: string, suffix: string): boolean {
+  return (
+    name === suffix ||
+    name.endsWith(`_${suffix}`) ||
+    name.endsWith(`-${suffix}`) ||
+    name.endsWith(`:${suffix}`)
+  );
+}
+
 /** Todo-list tools: built-in TodoWrite plus MCP update_todo_list variants. */
 export function isTodoTool(name: string): boolean {
   if (name === 'TodoWrite') return true;
-  if (/(?:^|[_\-:])update_todo_list$/.test(name)) return true;
+  if (hasToolSuffix(name, 'update_todo_list')) return true;
   const normalized = name.replace(/[^a-z0-9]/gi, '').toLowerCase();
   return normalized === 'updatetodos' || normalized === 'todolist' || normalized === 'todolistwrite';
+}
+
+export function isAskUserFormTool(name: string): boolean {
+  return hasToolSuffix(name, 'ask_user_form');
+}
+
+export function isApprovalTool(name: string): boolean {
+  return hasToolSuffix(name, 'request_approval');
+}
+
+export function isAskUserQuestionTool(name: string): boolean {
+  return name === 'AskUserQuestion';
+}
+
+export function isPushFileTool(name: string): boolean {
+  return hasToolSuffix(name, 'push_file');
+}
+
+/**
+ * Whether a tool participates in plan-mode UX. The provider's declared
+ * `semantic` is the source of truth; name matching is the fallback for bridges
+ * that do not send one yet.
+ */
+export function isPlanModeTool(name: string, semantic?: ToolSemantic): boolean {
+  if (semantic === 'plan_enter' || semantic === 'plan_exit' || semantic === 'plan_proposal') {
+    return true;
+  }
+  if (name === 'EnterPlanMode' || name === 'ExitPlanMode') return true;
+  return hasToolSuffix(name, 'enter_plan_mode') || hasToolSuffix(name, 'exit_plan_mode');
+}
+
+/** Whether a tool carries a plan proposal that should render as a plan card. */
+export function isPlanProposalTool(name: string, semantic?: ToolSemantic): boolean {
+  if (semantic === 'plan_proposal') return true;
+  if (name === 'ExitPlanMode') return true;
+  return hasToolSuffix(name, 'exit_plan_mode');
+}
+
+/** Any tool whose result is an interaction rather than plain output. */
+export function isInteractionTool(name: string, semantic?: ToolSemantic): boolean {
+  return (
+    isTodoTool(name) ||
+    isAskUserFormTool(name) ||
+    isAskUserQuestionTool(name) ||
+    isApprovalTool(name) ||
+    isPushFileTool(name) ||
+    isPlanModeTool(name, semantic)
+  );
+}
+
+/**
+ * The short name to show on a tool card. Bridged names are long and
+ * server-specific (`mcp__acme__update_todo_list`); readers care about the
+ * capability, so those collapse to the built-in spelling.
+ */
+export function toolDisplayName(name: string): string {
+  if (isTodoTool(name)) return 'TodoWrite';
+  if (isAskUserFormTool(name)) return 'AskUserForm';
+  if (isApprovalTool(name)) return 'RequestApproval';
+  if (isPushFileTool(name)) return 'PushFile';
+  return name;
 }
 
 const TODO_STATUSES = new Set(['pending', 'in_progress', 'completed', 'cancelled']);
@@ -220,14 +297,59 @@ export function classifyTool(call: ToolCallLike): ToolPresentation {
   };
 }
 
+/** First meaningful line of a proposed plan, heading marker stripped. */
+function planSummary(input: Record<string, unknown>): string {
+  const plan =
+    typeof input.plan === 'string'
+      ? input.plan
+      : input.plan
+        ? JSON.stringify(input.plan)
+        : typeof input.plan_file === 'string'
+          ? input.plan_file
+          : Object.keys(input).length > 0
+            ? JSON.stringify(input)
+            : '';
+  const firstLine =
+    plan
+      .split('\n')
+      .find(line => line.trim())
+      ?.replace(/^#+\s*/, '') || 'Plan ready for review';
+  return firstLine.length > 60 ? `${firstLine.slice(0, 60)}…` : firstLine;
+}
+
 /**
  * One line of "what is this call about", rendered next to the tool name in a
  * collapsed card header. Falls back to compact JSON for unknown tools.
  */
-export function toolSummary(name: string, rawInput: unknown): string {
+export function toolSummary(name: string, rawInput: unknown, semantic?: ToolSemantic): string {
   const input = asRecord(rawInput);
   if (!input) return '';
   if (isTodoTool(name)) return 'Update task list';
+  if (isAskUserFormTool(name)) return String(input.title ?? '') || 'Form';
+  if (isApprovalTool(name)) return String(input.title ?? '') || 'Approval required';
+  if (isPushFileTool(name)) {
+    const pushed = String(input.filePath ?? '');
+    return pushed ? (pushed.split('/').pop() ?? pushed) : 'Push file';
+  }
+  if (semantic === 'plan_enter') return 'Entering plan mode';
+  if (semantic === 'plan_exit') return 'Exiting plan mode';
+  if (isPlanProposalTool(name, semantic)) return planSummary(input);
+  // Specific tools before the set-based grouping below: MultiEdit is a
+  // file-edit tool but summarizes by edit count, not by path alone.
+  if (name === 'MultiEdit') {
+    const edits = Array.isArray(input.edits) ? input.edits.length : 0;
+    return `${extractFilePath(input) ?? 'file'} | ${edits} edits`;
+  }
+  if (name === 'ReadSymbol' || name === 'EditSymbol') {
+    const path = extractFilePath(input) ?? '';
+    const symbol = String(input.symbol ?? '');
+    return symbol ? `${path}#${symbol}` : path;
+  }
+  if (isAskUserQuestionTool(name)) {
+    const raw = normalizeToolInput(input.questions);
+    const count = Array.isArray(raw) ? raw.length : raw ? 1 : 0;
+    return `${count} question${count === 1 ? '' : 's'}`;
+  }
   if (TERMINAL_TOOLS.has(name)) {
     return String(input.command ?? input.context ?? input.code ?? '');
   }

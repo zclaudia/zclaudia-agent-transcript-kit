@@ -23,6 +23,12 @@
   /* Code text sizes independently of chrome: hosts often let readers scale it. */
   --ztk-code-font-size: var(--ztk-font-size-sm);
 
+  /* Status accents for tool cards. */
+  --ztk-accent: #6ca0e5;
+  --ztk-success: #6bc799;
+  --ztk-danger: #dc726a;
+  --ztk-surface-muted: #201f1d;
+
   /* Code surface + syntax palette. A host that already themes code (see the
      kit README) maps these onto its own --code-* tokens. */
   --ztk-code-bg: #141312;
@@ -198,4 +204,154 @@
 
 .ztk-code .token.italic {
   font-style: italic;
+}
+
+/* ── Tool call card ─────────────────────────────────────────── */
+
+.ztk-tool-card {
+  margin: 0.5rem 0;
+  border: 1px solid;
+  border-radius: calc(var(--ztk-radius) * 1.5);
+  /* Tinted by state: a running call, a failure, and a success should be
+     distinguishable in a long transcript without reading the header. Mixing
+     against transparent keeps one accent per state usable for both the border
+     and the fill. */
+}
+
+.ztk-tool-card--running {
+  border-color: color-mix(in srgb, var(--ztk-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--ztk-surface-muted) 40%, transparent);
+}
+
+.ztk-tool-card--done {
+  border-color: color-mix(in srgb, var(--ztk-success) 30%, transparent);
+  background: color-mix(in srgb, var(--ztk-success) 5%, transparent);
+}
+
+.ztk-tool-card--error {
+  border-color: color-mix(in srgb, var(--ztk-danger) 30%, transparent);
+  background: color-mix(in srgb, var(--ztk-danger) 5%, transparent);
+}
+
+.ztk-tool-card__header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--ztk-radius);
+  transition: background-color 0.15s;
+}
+
+.ztk-tool-card__header:hover {
+  background: color-mix(in srgb, var(--ztk-surface-muted) 50%, transparent);
+}
+
+.ztk-tool-card__status {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.ztk-tool-card--running .ztk-tool-card__status {
+  color: var(--ztk-accent);
+}
+
+.ztk-tool-card--done .ztk-tool-card__status {
+  color: var(--ztk-success);
+}
+
+.ztk-tool-card--error .ztk-tool-card__status {
+  color: var(--ztk-danger);
+}
+
+.ztk-tool-card__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-tool-card__name {
+  font-size: var(--ztk-font-size-sm);
+  font-weight: 500;
+  color: var(--ztk-fg);
+  flex-shrink: 0;
+}
+
+.ztk-tool-card__summary {
+  flex: 1;
+  min-width: 0;
+  margin-left: 0.5rem;
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ztk-tool-card__chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-tool-card__aside {
+  padding: 0 0.75rem 0.5rem;
+  margin-top: -0.25rem;
+}
+
+.ztk-tool-card__aside--indented {
+  padding-left: 2.25rem;
+}
+
+.ztk-tool-card__background-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--ztk-fg-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ztk-tool-card__background-button:hover:not(:disabled) {
+  color: var(--ztk-fg);
+}
+
+.ztk-tool-card__background-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.ztk-tool-card__activity {
+  padding-left: 1.5rem;
+  font-size: 0.6875rem;
+  color: var(--ztk-fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The spinner is the only motion the renderers own; it respects the reader's
+   reduced-motion preference. */
+.ztk-spin {
+  animation: ztk-spin 1s linear infinite;
+}
+
+@keyframes ztk-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ztk-spin {
+    animation: none;
+  }
 }

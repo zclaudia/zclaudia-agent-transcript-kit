@@ -21,7 +21,15 @@ import {
   createTranscriptBatcher,
   classifyTool,
   toolSummary,
+  toolDisplayName,
   isTodoTool,
+  isAskUserFormTool,
+  isApprovalTool,
+  isAskUserQuestionTool,
+  isPushFileTool,
+  isPlanModeTool,
+  isPlanProposalTool,
+  isInteractionTool,
   normalizeToolInput,
   extractFilePath,
   normalizeTodoItems,
@@ -469,6 +477,66 @@ check('toolSummary: one-line header per tool family', () => {
   eq(toolSummary('WebFetch', { url: 'https://a.io' }), 'https://a.io', 'webfetch');
   eq(toolSummary('mystery', { a: 1 }), '{"a":1}', 'compact json fallback');
   eq(toolSummary('mystery', 'nope'), '', 'non-object input');
+});
+
+// --- agent-ecosystem tool conventions ------------------------------------
+
+check('interaction tool predicates match MCP naming and plan semantics', () => {
+  // Bridged MCP tools arrive namespaced; the bare name is the contract.
+  for (const name of ['ask_user_form', 'mcp__x__ask_user_form', 'server-ask_user_form']) {
+    eq(isAskUserFormTool(name), true, `form: ${name}`);
+  }
+  eq(isAskUserFormTool('ask_user_form_extra'), false, 'suffix must terminate');
+  eq(isApprovalTool('mcp__x__request_approval'), true, 'approval');
+  eq(isPushFileTool('mcp__x__push_file'), true, 'push file');
+  eq(isAskUserQuestionTool('AskUserQuestion'), true, 'question');
+
+  // The provider's semantic outranks names; name matching is the fallback for
+  // bridges that do not send one yet.
+  eq(isPlanModeTool('whatever', 'plan_enter'), true, 'semantic enter');
+  eq(isPlanModeTool('ExitPlanMode'), true, 'native name');
+  eq(isPlanModeTool('mcp__x__enter_plan_mode'), true, 'bridge name');
+  eq(isPlanProposalTool('whatever', 'plan_proposal'), true, 'semantic proposal');
+  eq(isPlanProposalTool('EnterPlanMode'), false, 'entering is not proposing');
+  eq(isInteractionTool('TodoWrite'), true, 'todo is an interaction tool');
+  eq(isInteractionTool('Bash'), false, 'plain tool');
+});
+
+check('toolDisplayName normalizes bridged names to their short form', () => {
+  eq(toolDisplayName('mcp__x__update_todo_list'), 'TodoWrite', 'todo');
+  eq(toolDisplayName('mcp__x__ask_user_form'), 'AskUserForm', 'form');
+  eq(toolDisplayName('mcp__x__request_approval'), 'RequestApproval', 'approval');
+  eq(toolDisplayName('mcp__x__push_file'), 'PushFile', 'push file');
+  eq(toolDisplayName('Bash'), 'Bash', 'unknown passes through');
+});
+
+check('toolSummary covers interaction and plan tools', () => {
+  eq(toolSummary('mcp__x__ask_user_form', { title: 'Pick one' }), 'Pick one', 'form title');
+  eq(toolSummary('mcp__x__ask_user_form', {}), 'Form', 'form fallback');
+  eq(toolSummary('mcp__x__request_approval', {}), 'Approval required', 'approval fallback');
+  eq(toolSummary('mcp__x__push_file', { filePath: '/a/b/c.ts' }), 'c.ts', 'push file basename');
+  eq(toolSummary('X', {}, 'plan_enter'), 'Entering plan mode', 'plan enter');
+  eq(toolSummary('X', {}, 'plan_exit'), 'Exiting plan mode', 'plan exit');
+  // A proposal summarizes to the plan's first meaningful line, heading marker
+  // stripped, so the collapsed card says what the plan is about.
+  eq(
+    toolSummary('ExitPlanMode', { plan: '# Refactor the parser\nstep 1' }, 'plan_proposal'),
+    'Refactor the parser',
+    'plan first line',
+  );
+  eq(toolSummary('ExitPlanMode', {}, 'plan_proposal'), 'Plan ready for review', 'plan fallback');
+  eq(
+    toolSummary('MultiEdit', { file_path: '/a.ts', edits: [1, 2, 3] }),
+    '/a.ts | 3 edits',
+    'multiedit count',
+  );
+  eq(toolSummary('ReadSymbol', { path: '/a.ts', symbol: 'foo' }), '/a.ts#foo', 'symbol');
+  eq(
+    toolSummary('AskUserQuestion', { questions: [{ question: 'a' }, { question: 'b' }] }),
+    '2 questions',
+    'question count',
+  );
+  eq(toolSummary('AskUserQuestion', { questions: [{ question: 'a' }] }), '1 question', 'singular');
 });
 
 // --- diff utilities ---------------------------------------------------------
