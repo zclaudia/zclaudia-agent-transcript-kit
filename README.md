@@ -1,14 +1,15 @@
 # @zclaudia/agent-transcript-kit
 
-Shared agent-transcript view model, headless reducer, and transcript utilities for ZClaudia agent
-clients.
+Shared agent-transcript view model, headless reducer, transcript utilities, and optional React
+renderers for ZClaudia agent clients.
 
 The kit unifies the rendering view model, not the wire protocol: each host application keeps its
 own transport and writes a thin adapter that translates wire events into normalized
 `TranscriptEvent`s. The shared reducer folds those into a block-structured transcript (text →
 tool → text interleaving preserved), and pure selectors derive the strings hosts persist or copy.
 Session routing, sequence dedup, and reconnect reconciliation stay host-side; the package has no
-runtime dependencies and imports no host types.
+runtime dependencies and imports no host types. The React renderers are opt-in through a subpath,
+so layer-1/2 consumers never acquire React.
 
 ## Install
 
