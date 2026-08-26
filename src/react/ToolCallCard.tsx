@@ -72,7 +72,14 @@ export const ToolCallCard = memo(function ToolCallCard({
   const state = running ? 'running' : showAsError ? 'error' : 'done';
 
   return (
-    <div className={`ztk-tool-card ztk-tool-card--${state}`} data-testid="tool-use">
+    // `data-status` is the public hook for this card's visual state: hosts
+    // style against it and tests assert on it, so the class names underneath
+    // stay free to change.
+    <div
+      className={`ztk-tool-card ztk-tool-card--${state}`}
+      data-status={state}
+      data-testid="tool-use"
+    >
       <button
         type="button"
         onClick={() => setIsExpanded(!isExpanded)}
