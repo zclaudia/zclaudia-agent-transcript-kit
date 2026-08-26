@@ -10,12 +10,22 @@
 # Release flow after that:
 #   1. Bump "version" in package.json (and commit).
 #   2. Publish a GitHub release with tag v<version>.
+#
+# Or, for a release that is already merged but was never tagged, run this
+# workflow by hand from the Actions tab and pass the version. That path
+# publishes to npm without creating a tag or a GitHub release, so prefer the
+# release flow when the repository should carry a marker for the version.
 name: Publish to npm
 
 on:
   release:
     types:
       - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish — must match package.json (e.g. 0.2.0)'
+        required: true
 
 permissions:
   contents: read
@@ -40,8 +50,20 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - name: Verify release tag matches package version
-        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      # A release run targets its tag; a manual run targets the version typed
+      # into the form. Either way the published version is the one in
+      # package.json, so both must agree with it before anything is published.
+      - name: Verify target version matches package.json
+        env:
+          TARGET: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+        run: |
+          package="v$(node -p "require('./package.json').version")"
+          target="v${TARGET#v}"
+          if [ "$package" != "$target" ]; then
+            echo "package.json is $package but this run targets $target" >&2
+            exit 1
+          fi
+          echo "publishing $package"
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
