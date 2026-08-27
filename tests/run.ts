@@ -560,6 +560,53 @@ check('diffLines: LCS keeps context, marks changes', () => {
   eq(diffLines('same', 'same'), [{ kind: 'context', text: 'same' }], 'identical');
 });
 
+check('diffLines: empty sides still occupy a row', () => {
+  // '' splits into [''], so an empty file is one empty line, not zero lines —
+  // a pure insertion therefore drops that empty line and adds the new ones.
+  eq(diffLines('', ''), [{ kind: 'context', text: '' }], 'both empty');
+  eq(
+    diffLines('', 'line1\nline2'),
+    [
+      { kind: 'removed', text: '' },
+      { kind: 'added', text: 'line1' },
+      { kind: 'added', text: 'line2' },
+    ],
+    'pure insertion',
+  );
+  eq(
+    diffLines('line1\nline2', ''),
+    [
+      { kind: 'removed', text: 'line1' },
+      { kind: 'removed', text: 'line2' },
+      { kind: 'added', text: '' },
+    ],
+    'pure deletion',
+  );
+});
+
+check('diffLines: a change lands where it happened, not at the edges', () => {
+  eq(
+    diffLines('a\nb\nc', 'a\ninserted\nb\nc'),
+    [
+      { kind: 'context', text: 'a' },
+      { kind: 'added', text: 'inserted' },
+      { kind: 'context', text: 'b' },
+      { kind: 'context', text: 'c' },
+    ],
+    'insertion in the middle',
+  );
+  eq(
+    diffLines('a\nb\nremove\nc', 'a\nb\nc'),
+    [
+      { kind: 'context', text: 'a' },
+      { kind: 'context', text: 'b' },
+      { kind: 'removed', text: 'remove' },
+      { kind: 'context', text: 'c' },
+    ],
+    'deletion from the middle',
+  );
+});
+
 check('diffLines: over the cap degrades to removed/added runs', () => {
   const oldText = Array.from({ length: 401 }, (_, i) => `line${i}`).join('\n');
   const lines = diffLines(oldText, 'new');

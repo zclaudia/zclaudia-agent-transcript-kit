@@ -61,7 +61,7 @@ export const DiffView = memo(function DiffView(props: DiffViewProps) {
           {basename(displayPath)}
         </span>
         <span className="ztk-diff__stats">
-          {removed > 0 && <span className="ztk-diff__stat--removed">−{removed}</span>}
+          {removed > 0 && <span className="ztk-diff__stat--removed">-{removed}</span>}
           {added > 0 && <span className="ztk-diff__stat--added">+{added}</span>}
         </span>
       </div>
@@ -72,7 +72,7 @@ export const DiffView = memo(function DiffView(props: DiffViewProps) {
             <div key={index} className={`ztk-diff__line ztk-diff__line--${line.kind}`}>
               {!isUnified && (
                 <span className="ztk-diff__marker" aria-hidden>
-                  {line.kind === 'added' ? '+' : line.kind === 'removed' ? '−' : ' '}
+                  {line.kind === 'added' ? '+' : line.kind === 'removed' ? '-' : ' '}
                 </span>
               )}
               {/* A blank line still needs to occupy a row. */}
