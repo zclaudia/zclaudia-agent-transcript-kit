@@ -90,19 +90,38 @@ Transcript components live behind a subpath so that consumers of layers 1–2
 never acquire a React dependency:
 
 ```tsx
-import { CodeBlock, TranscriptCapabilitiesProvider } from '@zclaudia/agent-transcript-kit/react';
+import {
+  CodeBlock,
+  ThinkingBlock,
+  ToolCallCard,
+  TranscriptCapabilitiesProvider,
+} from '@zclaudia/agent-transcript-kit/react';
 import '@zclaudia/agent-transcript-kit/transcript.css';
 
-<TranscriptCapabilitiesProvider value={{ runInTerminal, highlightCode }}>
+<TranscriptCapabilitiesProvider value={{ runInTerminal, highlightCode, toolIcon }}>
   <CodeBlock language="bash">npm test</CodeBlock>
+  <ThinkingBlock content={reasoning} />
+  <ToolCallCard toolCall={call} renderExpanded={() => <MyToolBody call={call} />} />
 </TranscriptCapabilitiesProvider>;
 ```
+
+- `CodeBlock` — fenced code with copy and, where the host offers a terminal,
+  run-in-terminal.
+- `ThinkingBlock` — collapsed reasoning; `content` takes either a string or the
+  structured segments a provider streamed.
+- `ToolCallCard` — a tool call's status, name, summary, and collapse behavior.
+  The expanded body is the host's, passed as `renderExpanded` so it is built
+  only when open; the card publishes its state as `data-status`
+  (`running` / `done` / `error`) for host styling and tests.
 
 The renderers carry no runtime dependencies of their own. What differs between
 hosts is injected through `TranscriptCapabilities`, and every field is optional
 — an absent capability removes the affordance rather than breaking the render:
 
 - `runInTerminal(command)` — enables "Run in terminal" on shell code blocks.
+- `toolIcon(toolName)` — the host's icon for a tool. Icon sets and their
+  components stay host-side; the kit renders what comes back and falls back to
+  a generic glyph.
 - `highlightCode(code, language)` — the host's syntax highlighter. The kit
   ships none because hosts disagree (Prism, highlight.js, none), and bundling
   one would duplicate what a host already has. Return inline content with

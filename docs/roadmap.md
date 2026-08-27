@@ -220,10 +220,21 @@ store/context mock 渲染——组件还能不能抽走，跑这两个文件就�
   Prism 注入器 + 一次性 token 映射（5 个主题全跟随）。2808 UI 测试通过，
   含新增的高亮器契约测试（单一 `<pre>`、token class 而非内联样式）。
 
-**待办**：kit 发布 0.2.0 后把 zclaudia 的 `file:` 依赖切回 `^0.2.0`；
-搬 ToolCallCard（依赖 icon/classifier/formatter，需先定这些的注入方式）、
-ThinkingBlock、DiffView、InteractionCard；kit 自身的组件测试
-（现由 host 的纯度测试代跑）。
+**已搬组件**：`CodeBlock`、`ToolCallCard`、`ThinkingBlock`。
+
+- `ToolCallCard`：卡片壳 + 状态 + 折叠 + plan 自动展开进 kit；**图标**走
+  新增的 `toolIcon` capability，**展开体**走 `renderExpanded` render prop
+  （diff/终端/图片/插件渲染器是 host 的）。卡片发布 `data-status`
+  （running/done/error）作为公开契约——host 样式和测试都钉它，kit 内部
+  类名可自由重构。顺带把 MCP 命名约定（`isAskUserFormTool` 等）、
+  `toolDisplayName`、增强版 `toolSummary` 收进 `tool-classify`。
+- `ThinkingBlock`：两个 host 变体（`<thinking>` 文本 / 结构化 blocks）
+  合成一个，`content` 接受 `string | ThinkingSegment[]`；计数标签按形态
+  分别显示 lines/blocks。
+
+**待办**：kit 发 0.3.0 后把 zclaudia 的 `file:` 依赖切回 semver；
+搬 DiffView（kit 已有 `diffLines`/`diffStats`，只差外壳）、InteractionCard；
+kit 自身的组件测试（现由 host 的纯度测试代跑）。
 
 ## Layer 3 备忘
 
