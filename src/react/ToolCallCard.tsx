@@ -91,7 +91,7 @@ export const ToolCallCard = memo(function ToolCallCard({
         </span>
         <span className="ztk-tool-card__icon">{toolIcon?.(name) ?? <WrenchIcon size={14} />}</span>
         <span className="ztk-tool-card__name" data-testid="tool-name">
-          {toolDisplayName(name)}
+          {toolDisplayName(name, semantic)}
         </span>
         <span className="ztk-tool-card__summary">{toolSummary(name, input, semantic)}</span>
         <span className="ztk-tool-card__chevron">

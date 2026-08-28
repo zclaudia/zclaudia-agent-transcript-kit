@@ -507,6 +507,8 @@ check('toolDisplayName normalizes bridged names to their short form', () => {
   eq(toolDisplayName('mcp__x__ask_user_form'), 'AskUserForm', 'form');
   eq(toolDisplayName('mcp__x__request_approval'), 'RequestApproval', 'approval');
   eq(toolDisplayName('mcp__x__push_file'), 'PushFile', 'push file');
+  eq(toolDisplayName('ExitPlanMode'), 'Plan proposal', 'plan by name');
+  eq(toolDisplayName('whatever', 'plan_proposal'), 'Plan proposal', 'plan by semantic');
   eq(toolDisplayName('Bash'), 'Bash', 'unknown passes through');
 });
 

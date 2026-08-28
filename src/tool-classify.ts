@@ -130,7 +130,10 @@ export function isInteractionTool(name: string, semantic?: ToolSemantic): boolea
  * server-specific (`mcp__acme__update_todo_list`); readers care about the
  * capability, so those collapse to the built-in spelling.
  */
-export function toolDisplayName(name: string): string {
+export function toolDisplayName(name: string, semantic?: ToolSemantic): string {
+  // A plan proposal's tool name (ExitPlanMode, mcp__x__exit_plan_mode) names
+  // the mechanism; the reader cares that a plan is on offer.
+  if (isPlanProposalTool(name, semantic)) return 'Plan proposal';
   if (isTodoTool(name)) return 'TodoWrite';
   if (isAskUserFormTool(name)) return 'AskUserForm';
   if (isApprovalTool(name)) return 'RequestApproval';
