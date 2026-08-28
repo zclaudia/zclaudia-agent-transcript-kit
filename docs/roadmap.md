@@ -232,9 +232,28 @@ store/context mock 渲染——组件还能不能抽走，跑这两个文件就�
   合成一个，`content` 接受 `string | ThinkingSegment[]`；计数标签按形态
   分别显示 lines/blocks。
 
-**待办**：kit 发 0.3.0 后把 zclaudia 的 `file:` 依赖切回 semver；
-搬 DiffView（kit 已有 `diffLines`/`diffStats`，只差外壳）、InteractionCard；
-kit 自身的组件测试（现由 host 的纯度测试代跑）。
+**已搬组件（0.3.0 已发布，两个 host 均以 `^0.3.0` 消费）**：
+`CodeBlock`、`ToolCallCard`、`ThinkingBlock`、`DiffView`。
+
+**跨 host 复用已验证（2026-08-28）**：intellij 接入 `ToolCallCard`/
+`ThinkingBlock`/`DiffView`，同一份组件在两套 token 体系下各自正确渲染
+（diff 在 intellij 是 11px、zclaudia 12px，字体/图标各自跟随）。
+
+- **卡片布局已统一**：intellij 原为 `[chevron][icon][name][summary][status]`，
+  现统一为 kit 的 `[status][icon][name][summary][chevron]`——两种排列表达
+  同一件事，与其给 kit 加 per-host 开关，不如让 transcript 收敛
+  （intellij UI 本就 vendored from zclaudia）。
+- intellij 的展开体（diff/终端/高亮源码/todo）与 "Open in IDE" 走
+  `renderExpanded`；lucide 图标走 `toolIcon` capability。
+- 从 intellij 吸收进 kit：plan proposal 按语义命名为 "Plan proposal"
+  （工具名 `ExitPlanMode` 说的是机制）。删掉了 intellij 的死 prop
+  `defaultExpanded`（无调用点），kit 因此不必新增该 API。
+- **intellij 暂不接 `CodeBlock`**：它没有 `--code-*` 语法色 token
+  （高亮走 Prism 内置主题），接入等于把配色迁到 kit 默认色，是独立决策。
+
+**待办**：InteractionCard（需先定 kit `InteractionRequest` 四 kind 的响应
+契约）；intellij 的 CodeBlock 配色迁移；kit 自身的组件测试（现由两个 host
+的测试代跑）。
 
 ## Layer 3 备忘
 
