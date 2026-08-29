@@ -157,6 +157,7 @@ mapping its own tokens onto that contract once, on any ancestor:
 
 ```css
 :root {
+  --ztk-code-max-height: 20rem; /* long code scrolls instead of growing */
   --ztk-bg-subtle: hsl(var(--secondary));
   --ztk-border: hsl(var(--border));
   --ztk-code-bg: hsl(var(--code-bg));

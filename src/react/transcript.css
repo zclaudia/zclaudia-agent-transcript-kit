@@ -22,6 +22,10 @@
   --ztk-font-size-sm: 0.75rem;
   /* Code text sizes independently of chrome: hosts often let readers scale it. */
   --ztk-code-font-size: var(--ztk-font-size-sm);
+  /* Long code should scroll inside its block rather than push the rest of the
+     transcript off the page. Unset by default so adopting this does not
+     silently start clipping what a host already renders in full. */
+  --ztk-code-max-height: none;
 
   /* Status accents for tool cards. */
   --ztk-accent: #6ca0e5;
@@ -103,7 +107,8 @@
 }
 
 .ztk-code-block__body {
-  overflow-x: auto;
+  overflow: auto;
+  max-height: var(--ztk-code-max-height);
   -webkit-overflow-scrolling: touch;
   background: var(--ztk-code-bg);
 }
