@@ -166,6 +166,22 @@ Internal design notes live in [docs/design.md](docs/design.md), the cross-host m
 in [docs/mapping.md](docs/mapping.md), and per-host adapter worklists in
 [docs/roadmap.md](docs/roadmap.md).
 
+## Tests
+
+Two suites, each using what fits what it covers:
+
+```bash
+pnpm test        # both
+pnpm test:core   # layers 1–2, on plain node
+pnpm test:react  # renderers, under jsdom
+```
+
+`tests/run.ts` runs the reducer, selectors, and utilities on plain node with no
+test framework at all. The package has no runtime dependencies, and testing it
+that way keeps proving so — if an import crept in, this suite would stop
+running. The renderers need a DOM, so they use vitest and Testing Library
+(dev-only; neither reaches consumers).
+
 ## Compatibility
 
 The package follows semantic versioning. Additive fields and events are minor changes. Removing or
