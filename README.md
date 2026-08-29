@@ -130,9 +130,9 @@ hosts is injected through `TranscriptCapabilities`, and every field is optional
 - `highlightCode(code, language)` — the host's syntax highlighter. The kit
   ships none because hosts disagree (Prism, highlight.js, none), and bundling
   one would duplicate what a host already has. Return inline content with
-  Prism-style token classes (`token keyword`, …); the kit owns the
-  `<pre><code>` wrapper, so do not nest one, and emit classes rather than
-  inline styles so the theme can color them.
+  token classes rather than inline styles, so the theme colors them: both
+  Prism's (`token keyword`) and highlight.js's (`hljs-keyword`) vocabularies
+  are styled. The kit owns the `<pre><code>` wrapper, so do not nest one.
 
 ### Theming
 

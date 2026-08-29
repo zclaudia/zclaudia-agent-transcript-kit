@@ -119,39 +119,53 @@
 }
 
 /* ── Syntax tokens ──────────────────────────────────────────────
-   Prism-style class names, which is what host highlighters emit when asked
-   for classes rather than inline styles. Anything unmatched inherits
-   --ztk-code-fg. */
+   Two vocabularies, one palette. Highlighters disagree on class names —
+   Prism emits `token keyword`, highlight.js emits `hljs-keyword` — and the
+   kit ships neither, so it styles both against the same semantic variables.
+   Anything unmatched inherits --ztk-code-fg. */
 
 .ztk-code .token.comment,
 .ztk-code .token.prolog,
 .ztk-code .token.doctype,
-.ztk-code .token.cdata {
+.ztk-code .token.cdata,
+.ztk-code .hljs-comment,
+.ztk-code .hljs-quote {
   color: var(--ztk-code-comment);
   font-style: italic;
 }
 
-.ztk-code .token.punctuation {
+.ztk-code .token.punctuation,
+.ztk-code .hljs-punctuation {
   color: var(--ztk-code-punctuation);
 }
 
 .ztk-code .token.keyword,
 .ztk-code .token.important,
 .ztk-code .token.atrule,
-.ztk-code .token.rule {
+.ztk-code .token.rule,
+.ztk-code .hljs-keyword,
+.ztk-code .hljs-section,
+.ztk-code .hljs-selector-tag,
+.ztk-code .hljs-meta {
   color: var(--ztk-code-keyword);
 }
 
 .ztk-code .token.string,
 .ztk-code .token.char,
 .ztk-code .token.attr-value,
-.ztk-code .token.template-string {
+.ztk-code .token.template-string,
+.ztk-code .hljs-string,
+.ztk-code .hljs-meta .hljs-string,
+.ztk-code .hljs-link {
   color: var(--ztk-code-string);
 }
 
 .ztk-code .token.function,
 .ztk-code .token.method,
-.ztk-code .token.function-name {
+.ztk-code .token.function-name,
+.ztk-code .hljs-function,
+.ztk-code .hljs-title,
+.ztk-code .hljs-title.function_ {
   color: var(--ztk-code-function);
 }
 
@@ -159,52 +173,77 @@
 .ztk-code .token.boolean,
 .ztk-code .token.constant,
 .ztk-code .token.symbol,
-.ztk-code .token.unit {
+.ztk-code .token.unit,
+.ztk-code .hljs-number,
+.ztk-code .hljs-literal,
+.ztk-code .hljs-symbol,
+.ztk-code .hljs-bullet {
   color: var(--ztk-code-number);
 }
 
 .ztk-code .token.class-name,
 .ztk-code .token.builtin,
 .ztk-code .token.namespace,
-.ztk-code .token.type-class-name {
+.ztk-code .token.type-class-name,
+.ztk-code .hljs-built_in,
+.ztk-code .hljs-class,
+.ztk-code .hljs-type,
+.ztk-code .hljs-title.class_ {
   color: var(--ztk-code-class);
 }
 
 .ztk-code .token.variable,
 .ztk-code .token.property,
-.ztk-code .token.parameter {
+.ztk-code .token.parameter,
+.ztk-code .hljs-variable,
+.ztk-code .hljs-template-variable,
+.ztk-code .hljs-property,
+.ztk-code .hljs-params {
   color: var(--ztk-code-variable);
 }
 
 .ztk-code .token.tag,
-.ztk-code .token.selector {
+.ztk-code .token.selector,
+.ztk-code .hljs-tag,
+.ztk-code .hljs-name,
+.ztk-code .hljs-selector-id,
+.ztk-code .hljs-selector-class {
   color: var(--ztk-code-tag);
 }
 
 .ztk-code .token.attr-name,
 .ztk-code .token.operator,
 .ztk-code .token.entity,
-.ztk-code .token.url {
+.ztk-code .token.url,
+.ztk-code .hljs-attr,
+.ztk-code .hljs-attribute,
+.ztk-code .hljs-operator,
+.ztk-code .hljs-doctag {
   color: var(--ztk-code-attr);
 }
 
-.ztk-code .token.regex {
+.ztk-code .token.regex,
+.ztk-code .hljs-regexp {
   color: var(--ztk-code-regex);
 }
 
-.ztk-code .token.deleted {
+.ztk-code .token.deleted,
+.ztk-code .hljs-deletion {
   color: var(--ztk-code-deleted);
 }
 
-.ztk-code .token.inserted {
+.ztk-code .token.inserted,
+.ztk-code .hljs-addition {
   color: var(--ztk-code-inserted);
 }
 
-.ztk-code .token.bold {
+.ztk-code .token.bold,
+.ztk-code .hljs-strong {
   font-weight: 600;
 }
 
-.ztk-code .token.italic {
+.ztk-code .token.italic,
+.ztk-code .hljs-emphasis {
   font-style: italic;
 }
 
