@@ -130,7 +130,42 @@ run 生命周期）是被翻译对象——wire 的 `delta`/`tool_use`/`tool_res
 `wire-projector.ts` 的管线（见 zclaudia `docs/runtime-events.md`）是 wire 生产方，
 与 kit 无关。
 
-## Host 3：hermes-client-mobile（最后）
+## Host 3：hermes-client-mobile（核心已完成 2026-08-29）
+
+**已完成**（hermes 仓库分支 `transcript-kit-adapter`）：
+
+- `src/lib/transcript-adapter.ts`：gateway 事件 → `TranscriptEvent`。两处
+  hermes 特有形状在 adapter 消化：`message.complete` 带的是整条消息 →
+  映射为 `snapshot`（kit 与已到达的 delta 对账，丢尾也能补）；
+  `thinking.delta`/`reasoning.delta` 是同一个流的两个名字。
+  `resolveToolCallId` 让 host 决定事件属于哪个 tool call
+  （老网关无 `tool_id`、generating 占位需被接管）。
+- `src/lib/transcript-projection.ts`：kit 块结构 → hermes 扁平 `ChatEntry[]`。
+  **验证了 roadmap 原来的断言**"扁平可无损投影"。entry id 由
+  `turnId:blockIndex` 派生，turn 增长时不移位——否则流式过程中 React 重挂载
+  行、读者丢滚动位置。
+- `useStream` 改造：`entries` 变投影，`setEntries` 归零。host 保留 session
+  路由、前后台、busy/activity、interrupt 记账、sending。
+- **删除三个被取代的实现**：`parseCompletedTool`（→ kit `classifyTool`）、
+  `findRunningToolIndex`（→ host resolver）、`applyReactionEvent`（→ 直接
+  匹配 transcript items）。`stream-model.ts` 342 → 168 行。
+- 两个 host 自造字段其实 kit 已能表达：`toolGenerating` = `running &&
+  input === undefined`；`tool.progress` 是**替换**命令预览而非追加输出，
+  对应 `tool_activity.summary` 而非 `outputDelta`（我一开始映射错了，
+  读 host 代码才发现）。
+- 测试 74 → 99。**先写 11 条表征测试**钉住 742 行无测试 hook 的行为，
+  重构后一条未改地全绿；删除旧函数前把它们的覆盖移植到新实现。
+
+**接入暴露的 kit 缺口（已补，0.4.0）**：provider 先报工具名、后补参数，
+而 kit 的 `tool_started` 对已存在调用是严格 no-op → 参数丢失。改为
+**只填补缺失字段**：重放仍是严格 no-op（渲染身份不变），部分事件不会
+抹掉已知值。`name` 同时改为可选——它本来就可选，zclaudia 一直传空串
+糊弄类型。
+
+**Host 3 剩余**：layer 3 组件接入（唯一未验证的假设：手写 CSS 的 host
+能否用 `--ztk-*` 主题接口）；UI 层的移动端手势不强求接。
+
+以下为原始调研记录：
 
 **wire**：自研 JSON-RPC over WebSocket，类型在外部包 `@hermes/shared`——
 vite alias + tsconfig paths 指向 `~/.hermes/hermes-agent/apps/shared/src`。

@@ -1,6 +1,6 @@
 {
   "name": "@zclaudia/agent-transcript-kit",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Shared agent-transcript view model, headless reducer, text utilities, and optional React renderers",
   "license": "MIT",
   "repository": {

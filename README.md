@@ -60,9 +60,14 @@ const turn = state.items.find(item => item.kind === 'assistant_turn');
 ```
 
 The reducer is immutable and framework-free; wrap it in `useReducer`, Zustand, or anything else.
-Replays are idempotent (duplicate `turn_started`/`tool_started`/`marker` events are no-ops, text
-snapshots merge without duplicating), and stream events for an unknown turn create it, so
+Replays are idempotent — a repeated `turn_started`, `tool_started`, or `marker` changes nothing,
+and text snapshots merge without duplicating — and stream events for an unknown turn create it, so
 reconnecting mid-stream still renders.
+
+Details of a tool call may arrive after the call itself: providers commonly announce a tool before
+its arguments finish generating. A later `tool_started` for the same id fills in what is missing
+(`name`, `input`, `semantic`) and touches nothing else, which is why replay stays a no-op and a
+partial event cannot blank what is already known.
 
 ## Modules
 
