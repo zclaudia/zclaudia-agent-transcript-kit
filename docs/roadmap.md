@@ -339,6 +339,30 @@ kit 卡片渲染含"Denies automatically after 60s" → Allow → 工具执行�
 elicitation 按设计留 host（它开的是浏览器往返流程，不是 transcript 里的
 决定）。
 
+## intellij CodeBlock 配色迁移（已完成 2026-08-29，kit 0.7.0）
+
+修掉一个真实缺陷：intellij 有**六个主题变体**却只有**两套代码配色**
+（`theme === 'dark' ? oneDark : oneLight`），所以 `dark-intellij` 这个
+专门匹配 IDE 的主题，代码块用的是通用深色配色。
+
+- 代码块换 kit 组件，Prism 留 host 注入（`useInlineStyles={false}` 输出
+  token class 而非内联样式，颜色才能跟主题走）。
+- 每个主题家族映射自己的语法色，色相锚定已有强调色；`dark-intellij`
+  用 Darcula 真实配色。
+- kit 新增 `--ztk-code-max-height`（默认 none）：长代码此前会撑开页面
+  而非块内滚动。默认不设限，避免已接入的 host 突然开始裁剪内容。
+
+**对比度**：逐 token 检查六个主题，**四个颜色需从源配色调整**才够 AA
+（light 的标点/类名、Darcula 的注释灰/橙）。Darcula 那两个说明问题——
+它们在 IntelliJ 自己的编辑器背景上合规，这里的代码表面不同，照搬不够。
+最终六主题最差项：4.73/4.73/5.60/5.61/5.69/5.37。
+
+**教训（给后续同类工作）**：浏览器探针连续出错三次——`document.body`
+取错背景、`probe.style.color` 读不回、探测了 `.token.attr` 这个 Prism
+根本不发的类名（实际是 `attr-name`）。可疑数字要先诊断再用，最后改用
+纯 JS 解析 HSL 绕开浏览器才与手算对上。另外 daemon 会缓存启动时的资源
+映射，rebuild 后必须重启，否则 CSS 404。
+
 ## Layer 3 备忘
 
 - 只抽 transcript 渲染件：Markdown/CodeBlock、ToolCallCard、ThinkingBlock、
