@@ -33,6 +33,14 @@ export interface TranscriptCapabilities {
    * falls back to a generic glyph when this is absent or returns nothing.
    */
   toolIcon?: (toolName: string) => ReactNode | undefined;
+
+  /**
+   * Render markdown — a plan under review is written in it. Same reasoning as
+   * the highlighter: hosts already have a renderer configured with their own
+   * plugins and link handling, and a second one would disagree with the first.
+   * Without it the text renders as-is.
+   */
+  renderMarkdown?: (text: string) => ReactNode | undefined;
 }
 
 const TranscriptCapabilitiesContext = createContext<TranscriptCapabilities>({});

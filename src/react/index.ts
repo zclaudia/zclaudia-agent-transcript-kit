@@ -14,6 +14,7 @@ export {
 export { CodeBlock, SHELL_LANGUAGES, type CodeBlockProps } from './CodeBlock.js';
 export { ToolCallCard, type ToolCallCardProps } from './ToolCallCard.js';
 export { DiffView, type DiffViewProps } from './DiffView.js';
+export { InteractionCard, type InteractionCardProps } from './InteractionCard.js';
 export {
   ThinkingBlock,
   type ThinkingBlockProps,

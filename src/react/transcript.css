@@ -571,3 +571,178 @@
   color: color-mix(in srgb, var(--ztk-fg-muted) 70%, transparent);
   user-select: none;
 }
+
+/* ── Interaction card ───────────────────────────────────────────
+   The agent is stopped until this is answered, so it reads as something
+   waiting on the reader: accent-bordered, roomier than the surrounding
+   cards, with its actions on the right where a decision is expected. */
+
+.ztk-interaction {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--ztk-accent) 40%, transparent);
+  border-radius: calc(var(--ztk-radius) * 1.5);
+  background: color-mix(in srgb, var(--ztk-accent) 6%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ztk-interaction__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.ztk-interaction__title {
+  font-size: var(--ztk-font-size-sm);
+  font-weight: 600;
+  color: var(--ztk-fg);
+  padding: 0;
+}
+
+.ztk-interaction__description {
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-interaction__command,
+.ztk-interaction__plain {
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: var(--ztk-radius);
+  background: var(--ztk-code-bg);
+  color: var(--ztk-code-fg);
+  font-family: var(--ztk-font-mono);
+  font-size: var(--ztk-code-font-size);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.ztk-interaction__timeout {
+  font-size: 0.6875rem;
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-interaction__question,
+.ztk-interaction__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.ztk-interaction__option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg);
+  cursor: pointer;
+}
+
+.ztk-interaction__option input {
+  margin-top: 0.2em;
+  flex-shrink: 0;
+  accent-color: var(--ztk-accent);
+}
+
+.ztk-interaction__option-label {
+  display: block;
+}
+
+.ztk-interaction__option-description {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-interaction__checkboxes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ztk-interaction__field-label {
+  font-size: var(--ztk-font-size-sm);
+  font-weight: 500;
+  color: var(--ztk-fg);
+}
+
+.ztk-interaction__input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--ztk-border);
+  border-radius: var(--ztk-radius);
+  background: var(--ztk-bg-subtle);
+  color: var(--ztk-fg);
+  font-size: var(--ztk-font-size-sm);
+  font-family: inherit;
+}
+
+.ztk-interaction__input--code {
+  font-family: var(--ztk-font-mono);
+}
+
+.ztk-interaction__input:focus-visible {
+  outline: 2px solid var(--ztk-accent);
+  outline-offset: -1px;
+}
+
+.ztk-interaction__plan {
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.ztk-interaction__todos {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: var(--ztk-font-size-sm);
+  color: var(--ztk-fg-muted);
+}
+
+.ztk-interaction__todos li[data-status='completed'] {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.ztk-interaction__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.ztk-interaction__button {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--ztk-border);
+  border-radius: var(--ztk-radius);
+  background: var(--ztk-bg-subtle);
+  color: var(--ztk-fg);
+  font-size: var(--ztk-font-size-sm);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.ztk-interaction__button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ztk-surface-muted) 60%, transparent);
+}
+
+.ztk-interaction__button--primary {
+  border-color: transparent;
+  background: var(--ztk-accent);
+  color: var(--ztk-bg-subtle);
+  font-weight: 500;
+}
+
+.ztk-interaction__button--primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ztk-accent) 85%, black);
+}
+
+.ztk-interaction__button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -118,6 +118,18 @@ import '@zclaudia/agent-transcript-kit/transcript.css';
   The expanded body is the host's, passed as `renderExpanded` so it is built
   only when open; the card publishes its state as `data-status`
   (`running` / `done` / `error`) for host styling and tests.
+- `DiffView` — a file change, from two revisions or a diff already rendered.
+- `InteractionCard` — a blocking request for the reader's decision (approval,
+  question, form, plan review, secret). Takes an `InteractionRequest` and calls
+  `onRespond` with the matching `InteractionResponse`; delivering it is the
+  host's job, and `busy` locks the controls while that is in flight.
+
+  Capabilities are declared per request, not assumed: an approval offers only
+  the scopes the host listed, allows editing the tool input only when the host
+  can honor an edit, and states what the timeout will do only when the host
+  will act on it. The card also refuses to submit an incomplete answer — an
+  unanswered question or a chosen "Other" with no text — since a half-answer
+  resumes the agent on a premise the reader never gave.
 
 The renderers carry no runtime dependencies of their own. What differs between
 hosts is injected through `TranscriptCapabilities`, and every field is optional
@@ -127,6 +139,9 @@ hosts is injected through `TranscriptCapabilities`, and every field is optional
 - `toolIcon(toolName)` — the host's icon for a tool. Icon sets and their
   components stay host-side; the kit renders what comes back and falls back to
   a generic glyph.
+- `renderMarkdown(text)` — the host's markdown renderer, used for a plan under
+  review. Same reasoning as the highlighter: hosts have one configured with
+  their own plugins and link handling. Without it the text renders as written.
 - `highlightCode(code, language)` — the host's syntax highlighter. The kit
   ships none because hosts disagree (Prism, highlight.js, none), and bundling
   one would duplicate what a host already has. Return inline content with
