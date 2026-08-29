@@ -162,8 +162,28 @@ run 生命周期）是被翻译对象——wire 的 `delta`/`tool_use`/`tool_res
 抹掉已知值。`name` 同时改为可选——它本来就可选，zclaudia 一直传空串
 糊弄类型。
 
-**Host 3 剩余**：layer 3 组件接入（唯一未验证的假设：手写 CSS 的 host
-能否用 `--ztk-*` 主题接口）；UI 层的移动端手势不强求接。
+**Layer 3 接入（已完成 2026-08-29）——最后一个假设验证通过**：
+
+hermes 与另外两个 host 在每一层都不同：纯 hex 而非 HSL 分量、
+`[data-theme]` 属性而非 class、手写 CSS 而非 Tailwind、highlight.js
+而非 Prism。映射依然只是一段 `var()` 引用——自定义属性在**使用时**
+解析，一次映射覆盖两个主题。
+
+验证暴露并修掉两个真问题：
+
+1. **"高亮器可注入"原本只是名义上的**：kit 样式表只认 Prism 的
+   `token keyword`，highlight.js 输出 `hljs-keyword` → 接上去只有结构
+   没有颜色。kit 0.5.0 让样式表同时映射两套词汇到同一组语义变量。
+   **这个缺陷只有第三个 host 能发现**（前两个都用 Prism）。
+2. **hermes 的代码高亮本来就是坏的**：引的是
+   `highlight.js/styles/github.css`——钉死的 light 配色，dark 模式下
+   读者看到浅色主题的语法色。接 kit 后语法色走 `--ztk-code-*`，每个
+   主题一套。顺带查了对比度：light 的注释色（GitHub `#6e7781`）在
+   hermes 略深的代码底色上只有 4.0:1，调深到 `#656d76`；两个主题最差
+   项现为 4.63:1 / 4.95:1，均过 AA。
+
+**Host 3 剩余**：UI 层的移动端手势不强求接；ThinkingBlock/ToolCallCard
+可按需接（hermes 的 thinking/tool 是整行 entry，结构与卡片不同）。
 
 以下为原始调研记录：
 
