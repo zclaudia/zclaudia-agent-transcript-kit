@@ -310,6 +310,35 @@ store/context mock 渲染——组件还能不能抽走，跑这两个文件就�
 契约）；intellij 的 CodeBlock 配色迁移；kit 自身的组件测试（现由两个 host
 的测试代跑）。
 
+## InteractionCard（已完成 2026-08-29，kit 0.6.0）
+
+五种 kind 全部实现（approval/question/form/plan_review/secret_input），
+40 个组件测试。**intellij 已真机验证**：权限卡完整回路（Edit 触发 →
+kit 卡片渲染含"Denies automatically after 60s" → Allow → 工具执行）。
+
+**设计要点**：
+- 能力按请求声明，不假设：只提供 host 列出的 scope、只在 host 能兑现
+  编辑时才允许改 toolInput、只在 host 真会执行超时行为时才显示倒计时。
+  提供 host 兑现不了的 scope = 让读者选一个悄悄不发生的东西。
+- 拒绝提交半个答案（问题没答完、选了 Other 没写文本）——半个答案会让
+  agent 基于读者从未给出的前提继续跑。
+- 倒计时是静态文本而非跳秒：host 拥有那个时钟并自己解析交互，组件再跑
+  一个只会和它对不上。
+- secret 交出即丢弃（password 框、autocomplete=off、onRespond 后清空）。
+- markdown 加入注入式能力（`renderMarkdown`），理由同高亮器。
+
+**接入暴露的契约缺口（已补）**：form 响应无法区分"取消"与"提交空表单"
+（都是 `values: {}`），而 wire 分 accept/decline → 加 `cancelled` 标志。
+
+**host 侧的经验**：响应转换应写成带测试的纯函数而非内联胶水——两套词汇
+真正的分歧都在那里（wire 按 question 自己的 id 索引答案而 kit 按位置、
+拒绝表单 vs 接受空表单、被拒计划必须带可行动反馈）。intellij 因此删掉
+四个卡片实现，`AgentPlaygroundApp.tsx` 少 496 行。
+
+**剩余**：zclaudia/hermes 可按需接入（各自的交互 UI 仍在用）；URL 形态的
+elicitation 按设计留 host（它开的是浏览器往返流程，不是 transcript 里的
+决定）。
+
 ## Layer 3 备忘
 
 - 只抽 transcript 渲染件：Markdown/CodeBlock、ToolCallCard、ThinkingBlock、

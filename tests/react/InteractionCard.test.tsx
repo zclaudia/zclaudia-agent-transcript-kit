@@ -190,7 +190,7 @@ describe('InteractionCard · form', () => {
     });
   });
 
-  it('cancels without collecting what was typed', () => {
+  it('reports a dismissal as such, not as an empty submission', () => {
     const { onRespond } = renderCard({
       kind: 'form',
       id: 'i1',
@@ -199,7 +199,9 @@ describe('InteractionCard · form', () => {
     });
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'typed' } });
     fireEvent.click(screen.getByText('Cancel'));
-    expect(onRespond).toHaveBeenCalledWith({ kind: 'form', values: {} });
+    // Hosts relay a dismissal differently from an empty submission, so the
+    // response has to say which one happened.
+    expect(onRespond).toHaveBeenCalledWith({ kind: 'form', values: {}, cancelled: true });
   });
 
   it('starts a multiselect empty and accumulates choices', () => {

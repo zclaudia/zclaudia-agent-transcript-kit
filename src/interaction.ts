@@ -147,7 +147,17 @@ export type InteractionResponse =
       message?: string;
     }
   | { kind: 'question'; answers: QuestionAnswer[] }
-  | { kind: 'form'; values: Record<string, string | string[] | boolean> }
+  | {
+      kind: 'form';
+      values: Record<string, string | string[] | boolean>;
+      /**
+       * The user dismissed the form instead of filling it in. Distinct from
+       * submitting an empty one: hosts relay these to the agent differently
+       * (accept with no values vs. decline), and `values` alone cannot tell
+       * them apart.
+       */
+      cancelled?: boolean;
+    }
   | { kind: 'plan_review'; decision: 'approve' | 'reject'; feedback?: string }
   | { kind: 'secret_input'; value: string };
 

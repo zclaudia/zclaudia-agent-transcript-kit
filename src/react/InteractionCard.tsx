@@ -371,7 +371,7 @@ function FormBody({
           type="button"
           className="ztk-interaction__button"
           disabled={busy}
-          onClick={() => onRespond({ kind: 'form', values: {} })}
+          onClick={() => onRespond({ kind: 'form', values: {}, cancelled: true })}
         >
           {request.cancelLabel ?? 'Cancel'}
         </button>
