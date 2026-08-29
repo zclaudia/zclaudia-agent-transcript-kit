@@ -90,7 +90,7 @@ export function assertTranscriptEvent(
     case 'tool_started':
       requireString(event, 'turnId');
       requireString(event, 'toolCallId');
-      requireString(event, 'name');
+      optionalString(event, 'name');
       return;
     case 'tool_activity':
       requireString(event, 'turnId');

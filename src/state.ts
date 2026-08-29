@@ -231,10 +231,27 @@ export function applyTranscriptEvent(
 
     case 'tool_started':
       return upsertTurn(state, event.turnId, turn => {
-        if (turn.toolCalls[event.toolCallId]) return turn;
+        const existing = turn.toolCalls[event.toolCallId];
+        if (existing) {
+          // Providers announce a tool before its arguments finish generating,
+          // so a later tool_started for the same call carries what the first
+          // one lacked. This fills in missing fields only: a replayed event
+          // therefore changes nothing (identity is preserved for renderers),
+          // and a partial event cannot blank what is already known.
+          let next = existing;
+          if (!existing.name && event.name) next = { ...next, name: event.name };
+          if (existing.input === undefined && event.input !== undefined) {
+            next = { ...next, input: event.input };
+          }
+          if (existing.semantic === undefined && event.semantic !== undefined) {
+            next = { ...next, semantic: event.semantic };
+          }
+          if (next === existing) return turn;
+          return { ...turn, toolCalls: { ...turn.toolCalls, [event.toolCallId]: next } };
+        }
         const tool: ToolCallView = {
           id: event.toolCallId,
-          name: event.name,
+          name: event.name ?? '',
           status: 'running',
           input: event.input,
           semantic: event.semantic,

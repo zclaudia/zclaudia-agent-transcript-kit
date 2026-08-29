@@ -479,6 +479,35 @@ check('toolSummary: one-line header per tool family', () => {
   eq(toolSummary('mystery', 'nope'), '', 'non-object input');
 });
 
+check('tool_started fills in arguments that stream in after the name', () => {
+  // Providers announce a tool before its arguments finish generating, so a
+  // second tool_started for the same call carries the input the first lacked.
+  // Filling in only what is missing keeps replay a strict no-op.
+  const state = run([
+    { type: 'turn_started', turnId: 'r-gen' },
+    { type: 'tool_started', turnId: 'r-gen', toolCallId: 't1', name: 'terminal' },
+    { type: 'tool_started', turnId: 'r-gen', toolCallId: 't1', name: 'terminal', input: { command: 'ls' } },
+  ]);
+  const turn = onlyTurn(state, 'r-gen');
+  eq(turn.blocks.filter(b => b.kind === 'tool_call').length, 1, 'still one block');
+  eq(turn.toolCalls['t1'].input, { command: 'ls' }, 'input filled in');
+
+  // Replaying an identical event stays a no-op, so reconnect replay cannot
+  // churn state or identity.
+  const replayed = run(
+    [{ type: 'tool_started', turnId: 'r-gen', toolCallId: 't1', name: 'terminal', input: { command: 'ls' } }],
+    state,
+  );
+  if (replayed !== state) throw new Error('identical replay should not change state');
+
+  // A later event that omits the name must not blank the one already known.
+  const unnamed = run(
+    [{ type: 'tool_started', turnId: 'r-gen', toolCallId: 't1' }],
+    state,
+  );
+  eq(onlyTurn(unnamed, 'r-gen').toolCalls['t1'].name, 'terminal', 'name preserved');
+});
+
 // --- agent-ecosystem tool conventions ------------------------------------
 
 check('interaction tool predicates match MCP naming and plan semantics', () => {
@@ -654,7 +683,7 @@ check('assertTranscriptEvent rejects malformed events', () => {
     null,
     { type: 'nope' },
     { type: 'text_delta', turnId: 'x' }, // neither delta nor snapshot
-    { type: 'tool_started', turnId: 'x', toolCallId: 't' }, // missing name
+    { type: 'tool_started', turnId: 'x', name: 'Edit' }, // missing toolCallId
     { type: 'turn_failed', turnId: 'x' }, // missing error
     { type: 'interaction_requested', request: { id: 'i', kind: 'bogus' } },
     { type: 'interaction_resolved', interactionId: 'i', reason: 'whatever' },

@@ -37,7 +37,12 @@ export type TranscriptEvent =
       type: 'tool_started';
       turnId: string;
       toolCallId: string;
-      name: string;
+      /**
+       * Omitted when the provider announces a call before naming it, or when
+       * the caller only means to place the call in the block order. A later
+       * tool_started fills it in.
+       */
+      name?: string;
       input?: unknown;
       semantic?: ToolSemantic;
       at?: number;
