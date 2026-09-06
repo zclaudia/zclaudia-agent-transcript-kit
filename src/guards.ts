@@ -69,6 +69,11 @@ export function assertTranscriptEvent(
   const event = value;
 
   switch (event.type) {
+    case 'custom_block':
+      requireString(event, 'turnId');
+      requireString(event, 'blockId');
+      requireString(event, 'blockType');
+      return;
     case 'turn_started':
     case 'turn_finished':
     case 'turn_cancelled':

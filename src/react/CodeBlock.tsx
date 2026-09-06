@@ -26,15 +26,17 @@ export interface CodeBlockProps {
  */
 export const CodeBlock = memo(function CodeBlock({ language, children }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
-  const { runInTerminal, highlightCode } = useTranscriptCapabilities();
+  const [copyFailed, setCopyFailed] = useState(false);
+  const { runInTerminal, highlightCode, copyText, labels } = useTranscriptCapabilities();
   const isShell = SHELL_LANGUAGES.has(language.toLowerCase());
   const canRunInTerminal = isShell && Boolean(runInTerminal);
 
   const handleCopy = () => {
-    void navigator.clipboard.writeText(children).then(() => {
+    setCopyFailed(false);
+    void Promise.resolve().then(() => copyText ? copyText(children) : navigator.clipboard.writeText(children)).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), COPIED_FEEDBACK_MS);
-    });
+    }).catch(() => setCopyFailed(true));
   };
 
   const highlighted = highlightCode?.(children, language);
@@ -60,10 +62,11 @@ export const CodeBlock = memo(function CodeBlock({ language, children }: CodeBlo
             className={`ztk-code-block__action${copied ? ' ztk-code-block__action--done' : ''}`}
           >
             {copied ? <CheckIcon /> : <CopyIcon />}
-            {copied ? 'Copied!' : 'Copy code'}
+            {copied ? (labels?.copied ?? 'Copied!') : (labels?.copy ?? 'Copy code')}
           </button>
         </div>
       </div>
+      {copyFailed && <p role="alert">{labels?.copyFailed ?? 'Could not copy. Please select the code and copy manually.'}</p>}
       <div className="ztk-code-block__body ztk-code">
         <pre className="ztk-code-block__pre">
           <code>{highlighted ?? children}</code>

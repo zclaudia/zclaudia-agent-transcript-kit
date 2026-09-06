@@ -76,3 +76,16 @@ function cleanupAnd(render: () => void) {
   document.body.innerHTML = '';
   render();
 }
+
+it('uses host copy capability and localized feedback', async () => {
+ const copyText=vi.fn().mockResolvedValue(undefined);
+ renderBlock({copyText,labels:{copy:'复制代码',copied:'已复制'}});
+ fireEvent.click(screen.getByText('复制代码'));
+ expect(await screen.findByText('已复制')).toBeInTheDocument();
+ expect(copyText).toHaveBeenCalledWith('npm test');
+});
+it('reports clipboard failures without an unhandled rejection', async () => {
+ renderBlock({copyText:async()=>{throw Error('denied')},labels:{copyFailed:'复制失败'}});
+ fireEvent.click(screen.getByText('Copy code'));
+ expect(await screen.findByRole('alert')).toHaveTextContent('复制失败');
+});

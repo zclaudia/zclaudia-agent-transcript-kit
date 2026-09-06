@@ -219,3 +219,22 @@ will fail because npm package versions are immutable.
 ## License
 
 MIT
+
+## 0.8.0-comfy.0 migration candidate (not published)
+
+`custom_block` events add an ordered host-defined block inside an assistant turn:
+
+```ts
+{ type: 'custom_block', turnId: 'run-1', blockId: 'result-1',
+  blockType: 'my-host.result', payload: { assetId: 'asset-1' } }
+```
+
+The reducer deduplicates by block ID within the turn. Hosts render `kind: 'custom'`
+by `type` and validate their payloads. Unknown types may be omitted. Text and tool
+selectors keep their existing meaning. Hosts with exhaustive `TurnBlock` switches
+must add a custom case when upgrading; the wire protocol remains host-owned.
+
+`TranscriptCapabilities.copyText` optionally overrides clipboard access; `labels`
+customizes `copy`, `copied`, and `copyFailed`. Failures show an alert instead of an
+unhandled promise rejection. `ToolCallCard.displayName` and `displaySummary` override
+the default coding-tool classifier. CSS is marked as a package side effect.

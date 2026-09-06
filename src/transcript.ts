@@ -62,6 +62,7 @@ export interface AssistantTurnItem {
 }
 
 export type TurnBlock =
+  | { kind: 'custom'; id: string; type: string; payload?: unknown }
   | { kind: 'text'; text: string }
   | { kind: 'thinking'; text: string; signature?: string; redacted?: boolean }
   | { kind: 'tool_call'; toolCallId: string };

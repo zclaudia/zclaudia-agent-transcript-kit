@@ -219,6 +219,9 @@ export function applyTranscriptEvent(
       };
     }
 
+    case 'custom_block':
+      return upsertTurn(state, event.turnId, turn => turn.blocks.some(b => b.kind === 'custom' && b.id === event.blockId) ? turn : { ...turn, blocks: [...turn.blocks, { kind: 'custom', id: event.blockId, type: event.blockType, payload: event.payload }] });
+
     case 'text_delta':
       return upsertTurn(state, event.turnId, turn =>
         appendStream(turn, 'text', event),

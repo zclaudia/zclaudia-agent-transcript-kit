@@ -14,6 +14,8 @@ import {
 
 export interface ToolCallCardProps {
   toolCall: ToolCallView;
+  displayName?: string;
+  displaySummary?: string;
   /**
    * Host capability: move this running command to the background. Present ⇒ a
    * running shell card offers "Send to background".
@@ -43,6 +45,8 @@ const SUBAGENT_TOOLS = new Set(['Agent', 'Task']);
  */
 export const ToolCallCard = memo(function ToolCallCard({
   toolCall,
+  displayName,
+  displaySummary,
   onSendToBackground,
   renderExpanded,
 }: ToolCallCardProps) {
@@ -91,9 +95,9 @@ export const ToolCallCard = memo(function ToolCallCard({
         </span>
         <span className="ztk-tool-card__icon">{toolIcon?.(name) ?? <WrenchIcon size={14} />}</span>
         <span className="ztk-tool-card__name" data-testid="tool-name">
-          {toolDisplayName(name, semantic)}
+          {displayName ?? toolDisplayName(name, semantic)}
         </span>
-        <span className="ztk-tool-card__summary">{toolSummary(name, input, semantic)}</span>
+        <span className="ztk-tool-card__summary">{displaySummary ?? toolSummary(name, input, semantic)}</span>
         <span className="ztk-tool-card__chevron">
           {isExpanded ? <ChevronDownIcon size={12} /> : <ChevronRightIcon size={12} />}
         </span>

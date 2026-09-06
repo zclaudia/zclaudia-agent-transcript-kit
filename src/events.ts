@@ -23,6 +23,7 @@ import type {
 } from './interaction.js';
 
 export type TranscriptEvent =
+  | { type: 'custom_block'; turnId: string; blockId: string; blockType: string; payload?: unknown }
   | { type: 'turn_started'; turnId: string; model?: string; at?: number }
   | { type: 'text_delta'; turnId: string; delta?: string; snapshot?: string }
   | {

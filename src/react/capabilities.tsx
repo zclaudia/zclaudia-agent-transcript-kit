@@ -13,6 +13,9 @@ import { createContext, useContext, type ReactNode } from 'react';
  * rendering the host has an opinion about (syntax highlighting).
  */
 export interface TranscriptCapabilities {
+  copyText?: (text: string) => Promise<void>;
+  labels?: { copy?: string; copied?: string; copyFailed?: string };
+
   /** Paste a command/snippet into the host's terminal. */
   runInTerminal?: (command: string) => void;
 
