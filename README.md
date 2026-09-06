@@ -220,7 +220,7 @@ will fail because npm package versions are immutable.
 
 MIT
 
-## 0.8.0-comfy.0 migration candidate (not published)
+## 0.8.0
 
 `custom_block` events add an ordered host-defined block inside an assistant turn:
 
