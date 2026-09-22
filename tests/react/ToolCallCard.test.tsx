@@ -14,7 +14,11 @@ const call = (overrides: Partial<ToolCallView> = {}): ToolCallView => ({
 
 function renderCard(
   toolCall: ToolCallView,
-  props: { onSendToBackground?: () => void; renderExpanded?: () => React.ReactNode } = {},
+  props: {
+    onSendToBackground?: () => void;
+    backgroundRequested?: boolean;
+    renderExpanded?: () => React.ReactNode;
+  } = {},
   capabilities: TranscriptCapabilities = {},
 ) {
   return render(
@@ -114,6 +118,36 @@ describe('ToolCallCard', () => {
     expect(screen.getByText('Moving to background…')).toBeInTheDocument();
     fireEvent.click(screen.getByText('Moving to background…'));
     expect(onSendToBackground).toHaveBeenCalledTimes(1);
+  });
+
+  it('follows the host on whether a background request is in flight', () => {
+    // A host that learns the request failed can hand the button back to the
+    // reader; without that signal the card would stay locked forever.
+    const onSendToBackground = vi.fn();
+    const at = (backgroundRequested: boolean) => (
+      <TranscriptCapabilitiesProvider value={{}}>
+        <ToolCallCard
+          toolCall={call({ name: 'Bash', status: 'running' })}
+          onSendToBackground={onSendToBackground}
+          backgroundRequested={backgroundRequested}
+        />
+      </TranscriptCapabilitiesProvider>
+    );
+    const { rerender } = render(at(false));
+
+    fireEvent.click(screen.getByText('Send to background'));
+    expect(onSendToBackground).toHaveBeenCalledTimes(1);
+    // Controlled: the click alone does not lock the button; the host does.
+    expect(screen.getByText('Send to background')).toBeInTheDocument();
+
+    rerender(at(true));
+    expect(screen.getByText('Moving to background…')).toBeDisabled();
+    fireEvent.click(screen.getByText('Moving to background…'));
+    expect(onSendToBackground).toHaveBeenCalledTimes(1);
+
+    rerender(at(false));
+    fireEvent.click(screen.getByText('Send to background'));
+    expect(onSendToBackground).toHaveBeenCalledTimes(2);
   });
 
   it('withholds the background affordance where it would not apply', () => {

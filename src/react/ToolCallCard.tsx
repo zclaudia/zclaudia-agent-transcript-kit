@@ -22,6 +22,14 @@ export interface ToolCallCardProps {
    */
   onSendToBackground?: () => void;
   /**
+   * Whether a background request is in flight for this call. Uncontrolled by
+   * default: the card locks the button after the first click. A host that can
+   * learn the request failed (the runtime declined, the command had already
+   * finished) passes this instead, so the card follows the host's state and
+   * the reader can retry rather than stare at a locked "Moving to background…".
+   */
+  backgroundRequested?: boolean;
+  /**
    * The tool-specific expanded body. A render prop rather than children so it
    * is only built when the card is actually open — expanded bodies parse
    * results, render diffs, and decode images.
@@ -48,6 +56,7 @@ export const ToolCallCard = memo(function ToolCallCard({
   displayName,
   displaySummary,
   onSendToBackground,
+  backgroundRequested: controlledBackgroundRequested,
   renderExpanded,
 }: ToolCallCardProps) {
   const { name, input, semantic, summary: activity } = toolCall;
@@ -65,7 +74,8 @@ export const ToolCallCard = memo(function ToolCallCard({
     setIsExpanded(true);
   }, [isPlanProposal, isSettled]);
 
-  const [backgroundRequested, setBackgroundRequested] = useState(false);
+  const [localBackgroundRequested, setLocalBackgroundRequested] = useState(false);
+  const backgroundRequested = controlledBackgroundRequested ?? localBackgroundRequested;
   const { toolIcon } = useTranscriptCapabilities();
 
   const running = toolCall.status === 'running';
@@ -110,7 +120,7 @@ export const ToolCallCard = memo(function ToolCallCard({
             onClick={event => {
               event.stopPropagation();
               if (backgroundRequested) return;
-              setBackgroundRequested(true);
+              setLocalBackgroundRequested(true);
               onSendToBackground();
             }}
             disabled={backgroundRequested}

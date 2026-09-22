@@ -117,7 +117,11 @@ import '@zclaudia/agent-transcript-kit/transcript.css';
 - `ToolCallCard` — a tool call's status, name, summary, and collapse behavior.
   The expanded body is the host's, passed as `renderExpanded` so it is built
   only when open; the card publishes its state as `data-status`
-  (`running` / `done` / `error`) for host styling and tests.
+  (`running` / `done` / `error`) for host styling and tests. A running shell
+  call offers "Send to background" when the host passes `onSendToBackground`;
+  the button locks itself after one click unless the host controls it with
+  `backgroundRequested`, which lets a host that learns the request failed
+  unlock it for a retry.
 - `DiffView` — a file change, from two revisions or a diff already rendered.
 - `InteractionCard` — a blocking request for the reader's decision (approval,
   question, form, plan review, secret). Takes an `InteractionRequest` and calls
@@ -219,6 +223,14 @@ will fail because npm package versions are immutable.
 ## License
 
 MIT
+
+## 0.9.0
+
+`ToolCallCard.backgroundRequested` optionally controls the "Send to background"
+button's in-flight state. Uncontrolled cards keep locking after the first click;
+a host that hears back that the runtime declined (or the command had already
+finished) passes `false` again so the reader can retry instead of facing a
+permanently disabled "Moving to background…".
 
 ## 0.8.0
 
